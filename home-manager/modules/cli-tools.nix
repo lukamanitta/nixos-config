@@ -6,5 +6,6 @@
     unzip
     jq
     btop
+    lazygit
   ];
 }
