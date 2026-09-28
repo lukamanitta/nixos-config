@@ -23,7 +23,7 @@
     useUserPackages = true;
 
     users.luka = {
-      imports = [ ../../home-manager/default.nix ];
+      imports = [ ../../home-manager/users/luka.nix ];
     };
   };
 
