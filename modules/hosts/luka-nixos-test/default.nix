@@ -21,6 +21,18 @@
 
     users.luka = {
       imports = [ ../../users/luka/home.nix ];
+
+      my.hyprland = {
+        monitors = [
+          {
+            output = "";
+            mode = "preferred";
+            position = "auto";
+            scale = "1";
+          }
+        ];
+        workspaceRules = [ ];
+      };
     };
   };
 

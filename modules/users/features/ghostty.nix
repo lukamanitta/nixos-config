@@ -1,6 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
+  my.desktop.programs.terminal = lib.mkDefault "ghostty";
+
   home.packages = [ pkgs.ghostty ];
 
   xdg.configFile = {
