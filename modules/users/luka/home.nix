@@ -5,6 +5,7 @@
     ../features/shell.nix
     ../features/cli-tools.nix
     ../features/git.nix
+    ../features/gh.nix
     ../features/neovim.nix
     ../features/opencode.nix
     ../features/hyprland.nix

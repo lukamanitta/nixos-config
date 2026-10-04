@@ -107,9 +107,16 @@ nixosConfigurations.<host> = nixpkgs.lib.nixosSystem {
 };
 ```
 
-> **Gotcha:** a flake in a git repo only sees *tracked* files. `git add` (or
-> commit) the new host directory, or Nix will ignore it and fail on the missing
-> import.
+> **Gotchas:**
+> - A flake in a git repo only sees files **tracked** by git, and installing
+>   from a `github:`/remote ref uses the **committed** tree — local edits are
+>   ignored. `git add` and **commit** the new host dir (especially the generated
+>   `hardware-configuration.nix`) before installing, and install from the
+>   **local path** (`/path/to/flake#host`) if you have uncommitted changes.
+> - That committed `hardware-configuration.nix` must contain *this* machine's
+>   disk UUIDs. Installing with another machine's copy produces a system that
+>   can't find its root filesystem (initrd UUID timeout → emergency mode, and
+>   the root account is locked so you can't log in).
 
 ## 6. Install
 
