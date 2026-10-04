@@ -27,8 +27,9 @@
       }
 
       listener {
-          timeout = 300
-          on-timeout = loginctl lock-session
+          timeout = 500
+          on-timeout = notify-send "You are idle!"
+          on-resume = notify-send "Welcome back!"
       }
     '';
 
