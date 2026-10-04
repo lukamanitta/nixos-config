@@ -3,7 +3,9 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../../modules/system/core.nix
+    ../core.nix
+    ../features/desktop/hyprland.nix
+    ../../users/luka/system.nix
   ];
 
   networking.hostName = "luka-nixos-test";
@@ -12,18 +14,13 @@
   services.xserver.xkb.layout = "us";
   services.xserver.xkb.variant = "";
 
-  users.users.luka = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ];
-  };
-
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     useGlobalPkgs = true;
     useUserPackages = true;
 
     users.luka = {
-      imports = [ ../../home-manager/users/luka.nix ];
+      imports = [ ../../users/luka/home.nix ];
     };
   };
 

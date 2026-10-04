@@ -16,7 +16,7 @@
       luka-nixos-test = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
         modules = [
-          ./hosts/luka-nixos-test
+          ./modules/hosts/luka-nixos-test
           home-manager.nixosModules.home-manager
         ];
       };

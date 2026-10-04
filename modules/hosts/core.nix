@@ -9,9 +9,6 @@
 
   environment.systemPackages = with pkgs; [
     vim
-    git
-    wget
-    curl
   ];
 
   environment.variables.EDITOR = "vim";
