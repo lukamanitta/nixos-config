@@ -19,7 +19,7 @@ in
       {
         _args = [
           (key "RETURN")
-          (exec "xdg-terminal-exec")
+          (exec (if p.terminal != null then p.terminal else "xdg-terminal-exec"))
         ];
       }
     ]

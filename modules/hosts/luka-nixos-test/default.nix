@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   imports = [
@@ -21,6 +21,11 @@
 
     users.luka = {
       imports = [ ../../users/luka/home.nix ];
+
+      # hyprlauncher segfaults in QEMU (aquamarine picks a DRM node with no
+      # render node); use fuzzel (wl_shm-based) on the test VM only.
+      home.packages = [ pkgs.fuzzel ];
+      my.desktop.programs.launcher = "fuzzel";
 
       my.hyprland = {
         monitors = [
