@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 
 {
   imports = [
@@ -35,6 +35,8 @@
   };
 
   config = {
+    home.packages = [ pkgs.xdg-terminal-exec ];
+
     wayland.windowManager.hyprland = {
       enable = true;
       package = null;
