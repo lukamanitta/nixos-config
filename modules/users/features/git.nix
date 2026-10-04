@@ -3,7 +3,10 @@
 {
   programs.git = {
     enable = true;
-    userName = "Luka Manitta";
-    userEmail = "luka@lukamanitta.com";
+    settings = {
+      user.name = "Luka Manitta";
+      user.email = "luka@lukamanitta.com";
+      pull.rebase = true;
+    };
   };
 }
