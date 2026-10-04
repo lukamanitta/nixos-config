@@ -2,7 +2,8 @@
 
 let
   lua = lib.generators.mkLuaInline;
-  exec = cmd: lua "hl.dsp.exec_cmd(${lib.generators.toLua cmd})";
+  toLua = lib.generators.toLua { };
+  exec = cmd: lua "hl.dsp.exec_cmd(${toLua cmd})";
   repeat = {
     locked = true;
     repeating = true;

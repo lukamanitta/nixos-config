@@ -3,8 +3,9 @@
 let
   p = config.my.desktop.programs;
   lua = lib.generators.mkLuaInline;
+  toLua = lib.generators.toLua { };
   key = k: lua ''mod .. " + ${k}"'';
-  exec = cmd: lua "hl.dsp.exec_cmd(${lib.generators.toLua cmd})";
+  exec = cmd: lua "hl.dsp.exec_cmd(${toLua cmd})";
   bind = k: cmd: {
     _args = [
       (key k)
