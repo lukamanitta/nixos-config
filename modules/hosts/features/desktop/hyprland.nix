@@ -3,9 +3,13 @@
 {
   programs.hyprland.enable = true;
 
-  services.displayManager.sddm.enable = true;
-  services.displayManager.defaultSession = "hyprland";
-  services.displayManager.sddm.wayland.enable = true;
+  services.greetd = {
+    enable = true;
+    settings.default_session = {
+      command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd Hyprland";
+      user = "greeter";
+    };
+  };
 
   services.pipewire = {
     enable = true;

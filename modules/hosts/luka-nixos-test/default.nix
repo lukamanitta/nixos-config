@@ -12,7 +12,7 @@
   networking.networkmanager.enable = true;
 
   services.xserver.xkb.layout = "us";
-  services.xserver.xkb.variant = "";
+  console.useXkbConfig = true;
 
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
