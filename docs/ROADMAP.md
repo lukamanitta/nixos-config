@@ -62,6 +62,9 @@ around it.
 ### Later
 - [ ] Neovim composability: per-host tooling, then per-host plugins/config.
 - [ ] Managed secrets: Bitwarden SSH agent / Secrets Manager.
+- [ ] Config-artifact export: features **self-register** what (if anything) they
+      own worth exporting, then generate a bundle on demand. Deferred until the
+      real use cases are pinned down.
 - [ ] Dendritic refactor — trigger: first real non-test host.
 - [ ] Homelab nodes.
 - [ ] Migrate the main machine to NixOS — gated by the parity checklist.
@@ -75,12 +78,25 @@ around it.
 - One host today (`luka-nixos-test`); modules kept multi-host-shaped from the
   start.
 - Current layout:
-  - `hosts/<host>/` — machine-specific config.
-  - `modules/system/` — host-agnostic system modules.
-  - `home-manager/modules/` — host/user-agnostic HM feature modules.
-  - `home-manager/users/` — per-user profile composing feature modules.
+  - `modules/hosts/<host>/` — machine-specific host config (+ hardware).
+  - `modules/hosts/core.nix` — host-global settings.
+  - `modules/hosts/features/` — host-agnostic system feature modules.
+  - `modules/users/features/` — user / Home Manager feature modules.
+  - `modules/users/<user>/` — per-user profile composing feature modules.
 - [ ] Adopt `flake-parts` + `import-tree` (dendritic) once there are 2+ real
       hosts.
+
+### Config artifacts / feature self-registration (deferred)
+Idea: rather than a central dump that exports every generated file, each feature
+module **declares** what it owns that is worth materialising as plain files —
+for a stow-based dotfiles tree, sharing, or one-off generation. Not every
+feature is a program or something that should be exported, so registration must
+be opt-in per feature.
+
+- Deferred — nail down the actual use cases first (shareable dotfiles? non-Nix
+  bootstrap? one-off generation?).
+- Likely lands naturally with the dendritic refactor, where features are
+  self-registering modules. See [Dotfiles integration](#dotfiles-integration-hybrid).
 
 ### Dotfiles integration (hybrid)
 Keep `~/dotfiles` (git, GNU stow) as the single source of truth; Nix symlinks it

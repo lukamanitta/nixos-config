@@ -9,6 +9,7 @@
     ../features/neovim.nix
     ../features/opencode.nix
     ../features/hyprland.nix
+    ../features/ghostty.nix
   ];
 
   home.username = "luka";
