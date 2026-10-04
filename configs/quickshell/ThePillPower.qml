@@ -1,0 +1,346 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Widgets
+import "_Shared/Singletons"
+import "_Shared/Components"
+
+ThePillSurface {
+    id: root
+
+    mTop: 15
+    mLeft: 17
+    mRight: 17
+    mBottom: 14
+
+    property string hovered: ""
+
+    property int holdingIndex: -1
+    property real holdProgress: 0
+
+    /** Keyboard focus over the action tiles (rightmost on entry). */
+    property int navIndex: -1
+    signal navActivate()
+    signal navRelease()
+
+    function handleKey(e, pressed) {
+        if (root.actions.length === 0)
+            return true;
+        const k = e.key;
+        if (k === Qt.Key_Left || k === Qt.Key_H || k === Qt.Key_Up || k === Qt.Key_K) {
+            if (pressed)
+                root.moveNav(-1);
+            return true;
+        }
+        if (k === Qt.Key_Right || k === Qt.Key_L || k === Qt.Key_Down || k === Qt.Key_J) {
+            if (pressed)
+                root.moveNav(1);
+            return true;
+        }
+        if (k === Qt.Key_Return || k === Qt.Key_Enter) {
+            // Qt wayland synthesizes an auto-repeat as a KeyRelease + KeyPress
+            // pair, both flagged isAutoRepeat. Ignore those so a held Enter is
+            // exactly one press and one (immediately reactive) real release.
+            if (e.isAutoRepeat)
+                return true;
+            if (pressed)
+                root.navActivate();
+            else
+                root.navRelease();
+            return true;
+        }
+        return false;
+    }
+
+    function moveNav(d) {
+        const base = root.navIndex < 0 ? (d > 0 ? -1 : root.actions.length) : root.navIndex;
+        root.navIndex = Math.max(0, Math.min(root.actions.length - 1, base + d));
+        root.hovered = root.actions[root.navIndex].key;
+        root.soulKey = root.actions[root.navIndex].key;
+        root.focusNavTile();
+    }
+
+    /**
+     * Anchor the keyboard focus bead under the focused tile. The tiles are laid
+     * out after navIndex is first set (on open), so callers defer this via
+     * Qt.callLater when entering the surface.
+     */
+    function focusNavTile() {
+        const cell = tileRep.itemAt(root.navIndex);
+        if (!cell || !cell.tileRef)
+            return;
+        const c = cell.tileRef.mapToItem(root, cell.tileRef.width / 2, 0);
+        root.hoverX = c.x;
+        root.hoverY = c.y - 9 * root.s;
+    }
+
+    readonly property real anchorX: tiles.x + tiles.width / 2
+    readonly property real anchorY: tiles.y - 10 * root.s
+    property real tileHeatX: 0
+    property real tileHeatY: 0
+    property string soulKey: ""
+    property real hoverX: 0
+    property real hoverY: 0
+    readonly property real heatX: holdingIndex >= 0 ? tileHeatX : (soulKey.length ? hoverX : anchorX)
+    readonly property real heatY: holdingIndex >= 0 ? tileHeatY : (soulKey.length ? hoverY : anchorY)
+
+    ameForm: holdingIndex >= 0 ? "dock" : (soulKey.length ? "soul" : "off")
+    amePoint: Qt.point(heatX, heatY)
+
+    readonly property var actions: [
+        {
+            key: "lock",
+            glyph: "",
+            label: "Lock",
+            confirm: false,
+            dispatch: "",
+            argv: [Quickshell.env("HOME") + "/.config/hypr/scripts/lock.sh"]
+        },
+        {
+            key: "reboot",
+            glyph: "",
+            label: "Reboot",
+            confirm: true,
+            dispatch: "",
+            argv: ["systemctl", "reboot"]
+        },
+        {
+            key: "shutdown",
+            glyph: "",
+            label: "Shutdown",
+            confirm: true,
+            dispatch: "",
+            argv: ["systemctl", "poweroff"]
+        }
+    // { key: "shutdown", glyph: "", label: "Shutdown", confirm: true,  dispatch: "", argv: ["hyprshutdown", "-p", "\"shutdown now\""] }
+    ]
+
+    readonly property int splitAfter: 1
+
+    function run(a) {
+        if (a.dispatch && a.dispatch.length) {
+            Hyprland.dispatch(a.dispatch);
+        } else {
+            Quickshell.execDetached(a.argv);
+        }
+        root.requestClose();
+    }
+
+    onActiveChanged: {
+        if (active) {
+            navIndex = actions.length - 1;
+            hovered = actions[navIndex].key;
+            soulKey = actions[navIndex].key;
+            Qt.callLater(root.focusNavTile);
+        } else {
+            hovered = "";
+            soulKey = "";
+            holdingIndex = -1;
+            holdProgress = 0;
+            navIndex = -1;
+        }
+    }
+
+    Item {
+        id: header
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 22 * root.s
+
+        Row {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 8 * root.s
+            ThemedText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "POWER"
+                color: Theme.colour.foregroundSubtle
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.DemiBold
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 1.6 * root.s
+            }
+        }
+    }
+
+    Row {
+        id: tiles
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: header.bottom
+        anchors.topMargin: 14 * root.s
+        spacing: 12 * root.s
+
+        Repeater {
+            id: tileRep
+            model: root.actions
+
+            delegate: Row {
+                id: cell
+                required property int index
+                required property var modelData
+                readonly property Item tileRef: tile
+                spacing: 12 * root.s
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: cell.index === root.splitAfter
+                    width: 1
+                    height: 26 * root.s
+                    color: Theme.colour.border
+                }
+
+                Item {
+                    id: tile
+                    width: 50 * root.s
+                    height: 50 * root.s
+
+                    readonly property real hold: heat.hold
+                    readonly property bool isHover: root.hovered === cell.modelData.key
+                    readonly property bool holding: heat.holding
+                    readonly property bool lit: isHover || tile.holding
+                    readonly property color accent: cell.modelData.confirm ? Theme.colour.accent : Theme.colour.foregroundDefault
+
+                    onHoldChanged: {
+                        if (cell.modelData.confirm && tile.hold > 0.001) {
+                            root.holdingIndex = cell.index;
+                            root.holdProgress = tile.hold;
+                            const c = tile.mapToItem(root, tile.width / 2, tile.height / 2);
+                            root.tileHeatX = c.x;
+                            root.tileHeatY = c.y;
+                        } else if (root.holdingIndex === cell.index) {
+                            root.holdingIndex = -1;
+                            root.holdProgress = 0;
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Motion.rTile * root.s
+                        color: tile.isHover ? Theme.colour.surfaceOverlay : "transparent"
+                        border.width: 1
+                        border.color: tile.isHover ? Theme.colour.foregroundSubtle : Theme.colour.border
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Motion.fast
+                            }
+                        }
+                    }
+
+                    ClippingRectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: (Motion.rTile - 1) * root.s
+                        color: "transparent"
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: tile.height * tile.hold
+                            visible: tile.holding
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0.0
+                                    color: Qt.alpha(Theme.colour.verm, 0.7)
+                                }
+                                GradientStop {
+                                    position: 1.0
+                                    color: Qt.alpha(Theme.colour.vermLit, 0.15)
+                                }
+                            }
+                        }
+                    }
+
+                    ThemedText {
+                        anchors.centerIn: parent
+                        text: cell.modelData.glyph
+                        color: tile.holding ? Theme.colour.foregroundDefault : (tile.lit ? tile.accent : Theme.colour.foregroundMuted)
+                        font.pixelSize: Theme.fontSizeLarge
+                        font.weight: Font.Bold
+                    }
+
+                    HeatHold {
+                        id: heat
+                        onConfirmed: root.run(cell.modelData)
+                    }
+
+                    Connections {
+                        target: root
+                        function onNavActivate() {
+                            if (cell.index !== root.navIndex)
+                                return;
+                            if (cell.modelData.confirm)
+                                heat.press();
+                            else
+                                root.run(cell.modelData);
+                        }
+                        function onNavRelease() {
+                            if (cell.index === root.navIndex)
+                                heat.release();
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: {
+                            root.hovered = cell.modelData.key;
+                            root.soulKey = cell.modelData.key;
+                            const c = tile.mapToItem(root, tile.width / 2, 0);
+                            root.hoverX = c.x;
+                            root.hoverY = c.y - 9 * root.s;
+                        }
+                        onExited: {
+                            if (root.hovered === cell.modelData.key) {
+                                root.hovered = "";
+                            }
+                            if (cell.modelData.confirm) {
+                                heat.cancel();
+                            }
+                        }
+                        onPressed: if (cell.modelData.confirm)
+                            heat.press()
+                        onReleased: if (cell.modelData.confirm)
+                            heat.release()
+                        onClicked: {
+                            if (!cell.modelData.confirm) {
+                                root.run(cell.modelData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ThemedText {
+        id: label
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: tiles.bottom
+        anchors.topMargin: 12 * root.s
+        readonly property string focusKey: root.holdingIndex >= 0 ? root.actions[root.holdingIndex].key : root.hovered
+        readonly property var act: {
+            for (var i = 0; i < root.actions.length; i++) {
+                if (root.actions[i].key === label.focusKey) {
+                    return root.actions[i];
+                }
+            }
+            return null;
+        }
+        text: act ? (act.confirm ? act.label + " - hold" : act.label) : ""
+        color: act && act.confirm ? Theme.colour.vermLit : Theme.colour.foregroundMuted
+        font.pixelSize: Theme.fontSizeSmall
+        font.weight: Font.Medium
+        font.letterSpacing: 0.4 * root.s
+        opacity: text.length > 0 ? 1 : 0
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 120
+            }
+        }
+    }
+}
