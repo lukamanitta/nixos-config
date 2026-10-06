@@ -11,6 +11,8 @@
     ../features/opencode.nix
     ../features/hyprland
     ../features/ghostty.nix
+    ../features/tmux.nix
+    ../features/zen-browser.nix
   ];
 
   home.username = "luka";

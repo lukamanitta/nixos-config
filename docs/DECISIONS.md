@@ -203,3 +203,24 @@ embedded HM config (a NixOS module can read
 `programs.lock = "hyprlock"` (lock now) is provided by the baseline feature and
 bound to `$mod+L`. A persistent lock daemon (`services.lockDaemon`, e.g.
 quickshell's) lands with the deferred lock/autologin flow.
+
+---
+
+## Static configs & browsers
+
+### D25 — Static configs stay in their native language under `configs/` (settled)
+Rule of thumb: if a config is unlikely to vary between hosts, keep it in its
+original language in `configs/<tool>/` and symlink it in out-of-store (stays
+editable live); if it is likely to differ per host, generate it with Nix. Thin
+configs can still be inlined as `.text` (ghostty, hypr ecosystem); full native
+configs are symlinked (`configs/quickshell/`, `configs/tmux/tmux.conf`).
+Open sub-point: sharing constants (colours/theme) across a native config and
+Nix-generated configs. Likely shape: Nix renders a small theme/constants file
+into a writable location that the native config `source-file`s.
+
+### D26 — Zen browser via community flake + Home Manager module (settled)
+Zen is not in nixpkgs (verified against the pinned `26.05` and unstable). Use
+`0xc000022070/zen-browser-flake` (`homeModules.beta`), set
+`programs.zen-browser.enable` + `setAsDefaultBrowser`, and set
+`my.desktop.programs.browser = "zen-beta"`. Revisit for the official nixpkgs
+package if it lands (see [NixOS/nixpkgs#496647](https://github.com/NixOS/nixpkgs/pull/496647)).
