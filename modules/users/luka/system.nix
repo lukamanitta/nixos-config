@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 {
-  environment.shells = [ pkgs.zsh ];
+  programs.zsh.enable = true;
 
   users.users.luka = {
     isNormalUser = true;
