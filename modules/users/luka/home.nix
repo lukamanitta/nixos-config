@@ -4,6 +4,7 @@
   imports = [
     ../features/desktop/programs.nix
     ../features/shell.nix
+    ../features/zsh.nix
     ../features/cli-tools.nix
     ../features/git.nix
     ../features/gh.nix
