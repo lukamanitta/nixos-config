@@ -4,7 +4,8 @@
   imports = [
     ./hardware-configuration.nix
     ../core.nix
-    ../features/desktop/hyprland.nix
+    ../features/hyprland.nix
+    ../features/desktop
     ../../users/luka/system.nix
   ];
 

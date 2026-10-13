@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ../features/desktop/programs.nix
+    ../features/desktop
     ../features/shell.nix
     ../features/zsh.nix
     ../features/cli-tools.nix

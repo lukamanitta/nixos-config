@@ -224,3 +224,19 @@ Zen is not in nixpkgs (verified against the pinned `26.05` and unstable). Use
 `programs.zen-browser.enable` + `setAsDefaultBrowser`, and set
 `my.desktop.programs.browser = "zen-beta"`. Revisit for the official nixpkgs
 package if it lands (see [NixOS/nixpkgs#496647](https://github.com/NixOS/nixpkgs/pull/496647)).
+
+---
+
+## Removable media
+
+### D28 — Removable-media automount as a role-backed feature (settled)
+`udiskie` provides the session role `my.desktop.services.removableMedia` (D3/D5)
+and starts via Hyprland autostart like every other service (D8). Its config is
+generated from Nix so the browse/terminal actions follow
+`my.desktop.programs.{fileExplorer,terminal}` (D7): setting those roles anywhere
+carries over without editing the automount feature. The system side stays in the
+`desktop` host feature: `services.udisks2.enable` (which also enables polkit)
+plus `boot.supportedFilesystems = [ "vfat" "exfat" "ntfs" ]` for the common
+removable formats. SD cards behind a USB reader/hub need nothing extra — they
+present as ordinary USB mass storage.
+

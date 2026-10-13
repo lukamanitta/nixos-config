@@ -58,6 +58,11 @@
         default = null;
         description = "Clipboard history watcher command.";
       };
+      removableMedia = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Removable-media automounter command (e.g. udiskie).";
+      };
     };
   };
 }
