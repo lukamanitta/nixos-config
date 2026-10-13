@@ -1,5 +1,43 @@
 {
   "nodes": {
+    "colour-utils": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791471386,
+        "narHash": "sha256-M0iBapNtMD0TUaaBQwLBVEVQ868ncfY5ihK9pWWSWyI=",
+        "owner": "lukamanitta",
+        "repo": "colour_utils",
+        "rev": "af14cbd6cd0f6a2b760a600543effcef729ece0f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lukamanitta",
+        "repo": "colour_utils",
+        "type": "github"
+      }
+    },
+    "colourme": {
+      "inputs": {
+        "colour-utils": "colour-utils",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1791513414,
+        "narHash": "sha256-v2xWM8fgJow/W201fm+3p1/HEmQltlK1u1PrHfZkoeA=",
+        "owner": "lukamanitta",
+        "repo": "colourme",
+        "rev": "49fc65288d191c925515fa33ede2dc73d51e3ee0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lukamanitta",
+        "repo": "colourme",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -98,10 +136,32 @@
     },
     "root": {
       "inputs": {
+        "colourme": "colourme",
         "home-manager": "home-manager",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs",
         "zen-browser": "zen-browser"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "colourme",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791448976,
+        "narHash": "sha256-HJ4TEF3j7HmLYeEP/PtqjeiBX/6TppXB2qY53HcrWbs=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "f91010a5c1b6125b715eb78a84fb5dd8fb74a2b0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "zen-browser": {

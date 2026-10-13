@@ -1,0 +1,52 @@
+background =     "#2e3440"
+foreground =     "#d8dee9"
+
+cursor_bg =      "#d8dee9"
+cursor_fg =      "#2e3440"
+
+selection_bg =   "#4c566a"
+selection_fg =   "#d8dee9"
+
+accent =         "#81a1c1"
+
+vim_background = "dark"
+vim_name =       "Nord"
+
+wallpaper =      "~/.wallpaper/erik-wernquist-wanderers-stills/wanderers-enceladus-limb.jpg"
+
+base00 = "#2E3440"
+base01 = "#3B4252"
+base02 = "#434C5E"
+base03 = "#4C566A"
+base04 = "#D8DEE9"
+base05 = "#E5E9F0"
+base06 = "#ECEFF4"
+base07 = "#8FBCBB"
+base08 = "#BF616A"
+base09 = "#D08770"
+base0A = "#EBCB8B"
+base0B = "#A3BE8C"
+base0C = "#88C0D0"
+base0D = "#81A1C1"
+base0E = "#B48EAD"
+base0F = "#5E81AC"
+
+[regular]
+black =   "#3b4252"
+red =     "#bf616a"
+green =   "#a3be8c"
+yellow =  "#ebcb8b"
+blue =    "#81a1c1"
+magenta = "#b48ead"
+cyan =    "#88c0d0"
+white =   "#e5e9f0"
+
+[bright]
+black =   "#4c566a"
+red =     "#bf616a"
+green =   "#a3be8c"
+yellow =  "#ebcb8b"
+blue =    "#81a1c1"
+magenta = "#b48ead"
+cyan =    "#8fbcbb"
+white =   "#eceff4"

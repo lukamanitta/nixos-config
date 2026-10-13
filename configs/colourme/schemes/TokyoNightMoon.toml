@@ -1,0 +1,62 @@
+background =   "#222436"
+foreground =   "#c8d3f5"
+
+cursor_bg =    "#c8d3f5"
+cursor_fg =    "#222436"
+
+selection_bg = "#2d3f76"
+selection_fg = "#c8d3f5"
+
+accent =       "#c099ff"
+accent_alt_1 = "#86e1fc"
+accent_alt_2 = "#82aaff"
+
+vim_background = "dark"
+vim_name = "Tokyo Night Moon"
+
+wallpaper = "~/.wallpaper/tokyonight/heart_original.png"
+
+base00 = "#222436" # Background
+base01 = "#1e2030" # Lighter background
+base02 = "#2f334d" # Selection background
+base03 = "#444a73" # Comments, invisibles
+base04 = "#828bb8" # Dark foreground
+base05 = "#c8d3f5" # Default foreground
+base06 = "#b4c2f0" # Light foreground
+base07 = "#c8d3f5" # Lightest foreground
+base08 = "#c099ff" # Variables, XML tags
+base09 = "#ffc777" # Integers, booleans
+base0A = "#ffc777" # Classes, search text bg
+base0B = "#c3e88d" # Strings
+base0C = "#86e1fc" # Regex, escape chars
+base0D = "#82aaff" # Functions, methods
+base0E = "#fca7ea" # Keywords, storage
+base0F = "#c53b53" # Deprecated, special
+base10 = "#1e2030" # Darker background
+base11 = "#1a1b2a" # Darkest background
+base12 = "#ff757f" # Bright red
+base13 = "#ffd793" # Bright orange/yellow
+base14 = "#c3e88d" # Bright green
+base15 = "#86e1fc" # Bright cyan
+base16 = "#82aaff" # Bright blue
+base17 = "#fca7ea" # Bright magenta
+
+[regular]
+black = '#1b1d2b'
+red = '#ff757f'
+green = '#c3e88d'
+yellow = '#ffc777'
+blue = '#82aaff'
+magenta = '#c099ff'
+cyan = '#86e1fc'
+white = '#828bb8'
+
+[bright]
+black = '#444a73'
+red = '#ff8d94'
+green = '#c7fb6d'
+yellow = '#ffd8ab'
+blue = '#9ab8ff'
+magenta = '#caabff'
+cyan = '#b2ebff'
+white = '#c8d3f5'

@@ -5,6 +5,7 @@
     ../features/desktop
     ../features/shell.nix
     ../features/zsh.nix
+    ../features/colourme.nix
     ../features/cli-tools.nix
     ../features/git.nix
     ../features/gh.nix

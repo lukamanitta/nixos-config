@@ -1,0 +1,13 @@
+[hypr]
+template = "templates/hypr.lua"
+destination = "~/.config/hypr/theme/colourme.lua"
+post_hook = "hyprctl reload"
+
+[ghostty]
+template = "templates/ghostty"
+destination = "~/.config/ghostty/themes/Luka"
+post_hook = "pkill -USR2 ghostty"
+
+[quickshell]
+template = "templates/quickshell.json"
+destination = "~/.local/state/colourme/colours.json"

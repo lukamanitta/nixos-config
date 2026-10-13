@@ -147,7 +147,7 @@ An earlier attempt bundled generated configs for stow/one-off use. Dropped: not
 every feature is a program that should be exported. Future: features
 *self-register* what is exportable. See [ROADMAP.md](./ROADMAP.md).
 
-### D18 — colourme is a palette→template renderer; Nix integration deferred (open)
+### D18 — colourme is a palette→template renderer; Nix integration deferred (superseded by D27)
 colourme renders template files from base16/24 palettes and copies them into
 config dirs (with an optional post hook), so the whole system theme can be
 switched with one command. It does *not* read wallpapers (it can set them). Nix
@@ -224,6 +224,34 @@ Zen is not in nixpkgs (verified against the pinned `26.05` and unstable). Use
 `programs.zen-browser.enable` + `setAsDefaultBrowser`, and set
 `my.desktop.programs.browser = "zen-beta"`. Revisit for the official nixpkgs
 package if it lands (see [NixOS/nixpkgs#496647](https://github.com/NixOS/nixpkgs/pull/496647)).
+
+---
+
+## Theming (colourme)
+
+### D27 — Seam model: Nix owns structure, colourme owns themed bytes (settled)
+The Nix store is immutable and colourme writes in place, so Nix must never own
+a themed value. Instead Nix generates *structure* and points each themed value
+at a **runtime-writable** file that colourme renders; live reload is driven by
+colourme's own `post_hook`s. Three seams: Hyprland (`require("theme.colourme")`
+in the generated lua, via `lib.generators.mkLuaInline`), Ghostty (`theme = Luka`
+pointing at a runtime theme file), Quickshell (`FileView` watcher on a runtime
+JSON, replacing the old overwrite-`Colours.qml` approach so generated colour
+data stays out of git). Waybar/tmux/starship are out of scope; tmux/starship
+inherit Ghostty's palette.
+
+colourme's inputs (`config.toml`, `templates/`, `schemes/`) live in
+`configs/colourme/` and are symlinked out-of-store to `~/.config/colourme` so
+they stay live-editable. Defaults (so apps don't depend on colourme) are
+rendered at build time from the same templates by a packaged colourme
+(`--no-hooks --dest-root`) and seeded at activation only if absent; the default
+scheme is a `my.theme.defaultScheme` option. colourme is a build input only,
+never installed. This requires colourme interface changes (`--config`,
+`--schemes-dir`, `--no-hooks`, `--dest-root`, relative-path resolution,
+parent-dir creation) and a colourme flake.
+
+Full plan: [THEME-PIPELINE.md](./THEME-PIPELINE.md). Required colourme changes
+are specified in that repo's `INTERFACE_CHANGES.md`.
 
 ---
 

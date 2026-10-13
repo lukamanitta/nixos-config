@@ -1,0 +1,21 @@
+{
+  "surfaceDefault": "#{{hex: base01 || hex: background}}",
+  "surfaceLight": "#{{hex: multiply_brightness(base01, 1.2) || hex: multiply_brightness(background, 1.2)}}",
+  "surfaceOverlay": "#{{hex: base02 || hex: multiply_brightness(base01, 1.3) || hex: multiply_brightness(background, 1.3)}}",
+  "foregroundDefault": "#{{hex: base05 || hex: foreground}}",
+  "foregroundSubtle": "#{{hex: base04 || hex: multiply_brightness(foreground, 0.7)}}",
+  "foregroundMuted": "#{{hex: base03 || hex: bright.black}}",
+  "border": "#{{hex: base03 || hex: base02 || hex: multiply_brightness(base01, 1.5)}}",
+  "shadow": "#{{hex: base11 || hex: base00 || hex: background}}",
+  "critical": "#{{hex: base08 || hex: regular.red}}",
+  "accent": "#{{hex: accent}}",
+  "accentMuted": "#{{hex: multiply_brightness(accent, 0.5)}}",
+  "verm": "#{{hex: hsv(h(accent), 78.0, 75.0)}}",
+  "vermLit": "#{{hex: hsv(h(accent), 74.0, 88.0)}}",
+  "flameCore": "#{{hex: hsv(h(accent), 24.0, 100.0)}}",
+  "flameGlow": "#{{hex: hsv(h(accent), 61.0, 100.0)}}",
+  "flameInk": "#{{hex: hsv(h(accent), 62.0, 94.0)}}",
+  "flameEmber": "#{{hex: hsv(h(accent), 86.0, 49.0)}}",
+  "flameBurn": "#{{hex: hsv(h(accent), 86.0, 54.0)}}",
+  "flameTip": "#{{hex: hsv(h(accent), 46.0, 100.0)}}"
+}

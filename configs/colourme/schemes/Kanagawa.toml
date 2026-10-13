@@ -1,0 +1,53 @@
+background =   "#1f1f28"
+foreground =   "#dcd7ba"
+
+cursor_bg =    "#c8c093"
+cursor_fg =    "#c8c093"
+
+selection_bg = "#2d4f67"
+selection_fg = "#c8c093"
+
+accent =       "#e6c384"
+
+vim_background = "dark"
+vim_name = "Kanagawa"
+
+# wallpaper = "~/.wallpaper/the-great-wave-off-kanagawa-inverse.jpg"
+wallpaper = "~/.wallpaper/kanagawa/wave-outline.jpg"
+
+base00 = "#1F1F28"
+base01 = "#16161D"
+base02 = "#223249"
+base03 = "#54546D"
+base04 = "#727169"
+base05 = "#DCD7BA"
+base06 = "#C8C093"
+base07 = "#717C7C"
+base08 = "#C34043"
+base09 = "#FFA066"
+base0A = "#C0A36E"
+base0B = "#76946A"
+base0C = "#6A9589"
+base0D = "#7E9CD8"
+base0E = "#957FB8"
+base0F = "#D27E99"
+
+[regular]
+black =   "#16161d"
+red =     "#c34043"
+green =   "#76946a"
+yellow =  "#c0a36e"
+blue =    "#7e9cd8"
+magenta = "#957fb8"
+cyan =    "#6a9589"
+white =   "#c8c093"
+
+[bright]
+black =   "#727169"
+red =     "#e82424"
+green =   "#98bb6c"
+yellow =  "#e6c384"
+blue =    "#7fb4ca"
+magenta = "#938aa9"
+cyan =    "#7aa89f"
+white =   "#dcd7ba"

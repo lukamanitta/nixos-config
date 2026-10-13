@@ -7,6 +7,7 @@
 
   xdg.configFile = {
     "ghostty/config".text = ''
+      theme = Luka
       font-size = 12
       window-padding-x = 8
       window-padding-y = 8

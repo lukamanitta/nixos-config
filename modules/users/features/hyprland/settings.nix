@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 
 {
   wayland.windowManager.hyprland.settings.config = {
@@ -14,7 +14,7 @@
       resize_on_border = false;
       allow_tearing = false;
       layout = "dwindle";
-      col.active_border = "rgba(735c99ff)";
+      col.active_border = lib.generators.mkLuaInline ''require("theme.colourme").activeBorderColor'';
     };
 
     decoration = {
@@ -40,7 +40,7 @@
       };
     };
 
-    group.col.border_active = "rgba(735c99ff)";
+    group.col.border_active = lib.generators.mkLuaInline ''require("theme.colourme").activeBorderColor'';
 
     animations = {
       enabled = true;
