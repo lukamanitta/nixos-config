@@ -8,6 +8,7 @@
     hyprlock
     hypridle
     hyprpaper
+    mako
     waybar
   ];
 
@@ -15,6 +16,7 @@
     programs.launcher = lib.mkDefault "hyprlauncher";
     programs.lock = lib.mkDefault "hyprlock";
     services.idle = lib.mkDefault "hypridle";
+    services.notification = lib.mkDefault "mako";
     services.wallpaper = lib.mkDefault "hyprpaper";
     services.statusBar = lib.mkDefault "waybar";
   };
@@ -46,6 +48,15 @@
           size = 200, 50
           outline_thickness = 3
       }
+    '';
+
+    "mako/config".text = ''
+      font=monospace 10
+      max-visible=5
+      default-timeout=5000
+      border-size=0
+      background-color=#1a1b2a
+      text-color=#828bb8
     '';
 
     "waybar/config".text = ''

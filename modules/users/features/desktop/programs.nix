@@ -48,6 +48,11 @@
         default = null;
         description = "Idle management daemon command.";
       };
+      notification = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Notification daemon command.";
+      };
       wallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
