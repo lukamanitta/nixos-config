@@ -1,0 +1,10 @@
+@define-color colourme_bg #{{hex: base00 || hex: background}};
+@define-color colourme_surface #{{hex: base01 || hex: background}};
+@define-color colourme_surface_alt #{{hex: base02 || hex: base01}};
+@define-color colourme_fg #{{hex: base05 || hex: foreground}};
+@define-color colourme_fg_dim #{{hex: base04 || hex: foreground}};
+@define-color colourme_fg_muted #{{hex: base03 || hex: bright.black}};
+@define-color colourme_accent #{{hex: accent}};
+@define-color colourme_critical #{{hex: base08 || hex: regular.red}};
+@define-color colourme_success #{{hex: base0B || hex: regular.green}};
+@define-color colourme_warning #{{hex: base0A || hex: regular.yellow}};

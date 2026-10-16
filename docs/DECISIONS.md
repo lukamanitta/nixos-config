@@ -179,13 +179,37 @@ Secrets Manager. See [ROADMAP.md](./ROADMAP.md).
 
 ## Hypr ecosystem defaults
 
-### D22 — Hypr ecosystem defaults make hyprland a usable DE (settled)
-Enabling the hyprland feature pulls a `hyprland-ecosystem` feature which installs
-and `mkDefault`s: `launcher` → `hyprlauncher`, `lock` → `hyprlock`, `idle` →
-`hypridle`, `wallpaper` → `hyprpaper`, `statusBar` → `waybar`. It also ships
-minimal configs (`hypridle.conf`, `hyprpaper.conf`, `hyprlock.conf`, waybar
-`config`/`style.css`) so they run out of the box. A host/user can override or
-drop any of them. Rationale: "hyprland alone should be a usable desktop."
+### D22 — Hypr ecosystem defaults make hyprland a usable DE (superseded by D29)
+Enabling the hyprland feature pulled a `hyprland-ecosystem` feature which
+installed and `mkDefault`s a launcher/lock/idle/wallpaper/status-bar. Rationale:
+"hyprland alone should be a usable desktop." Superseded by D29 — the ecosystem
+became a first-class desktop environment (LitheDE) rather than an implicit
+default, and the OSD/notification/dock surfaces grew.
+
+### D29 — Two peer desktop environments on a shared compositor base (settled)
+The `hyprland` feature is compositor-only (DE-agnostic). Desktop environments
+are peers under `modules/users/desktops/<slug>/`, selected by the single option
+`my.desktops.environment` (enum, default `"lithe"`); a structural guarantee
+makes "at most one" automatic, so no assert is needed. LitheDE (`lithe`) is the
+default, mouse-first, general-audience DE; LiquoRice (`liquorice`) is the
+personal Quickshell DE. Each DE's config is gated on its own slug, so swapping
+is one option — no forks, no `mkForce`, no default-plus-overrides hierarchy.
+
+The visual half of the compositor config (`general`/`decoration`/`group`/
+animations) lives per-DE; the non-visual half (input, misc, cursor, master,
+binds, monitors, rules, autostart) stays shared. Deliberate duplication is
+accepted so the two DEs can diverge. Full design: [LITHEDE.md](./LITHEDE.md).
+
+### D30 — LitheDE is mouse-first (settled)
+LitheDE targets relatively non-technical users: core actions must be reachable
+without keybinds. Concretely: waybar top bar with a launcher button, a taskbar
+(`wlr/taskbar`, click to focus / middle-click to close) and workspaces centred;
+hyprbars window title bars with close/float/fullscreen buttons; a swaync
+control center (power, Wi-Fi toggle) as the "mini settings menu"; hyprlauncher
+as the single launcher + clipboard picker (dmenu mode; no wofi); swayosd for
+the transient volume/brightness OSD. All themed from the shared colourme
+palette. This grows D3's role set with `services.osd`.
+
 
 ---
 
@@ -240,6 +264,14 @@ JSON, replacing the old overwrite-`Colours.qml` approach so generated colour
 data stays out of git). Waybar/tmux/starship are out of scope; tmux/starship
 inherit Ghostty's palette.
 
+The toolkit seams added for LitheDE (D29/D30/D31) extend the same model:
+**GTK3** (`@import "colourme-gtk.css"` from a Nix-owned `gtk-3.0/gtk.css`;
+colourme writes `@define-color theme_*`), **GTK4/libadwaita** (same trick in
+`gtk-4.0/gtk.css` + `gtk-dark.css`, overriding libadwaita's named colours), and
+**waybar** (`@import "colourme-waybar.css"`). GTK/waybar reload on app restart;
+the colour names churn across versions (re-check on bumps). Qt palette is
+`qt6ct` (no colourme seam yet).
+
 colourme's inputs (`config.toml`, `templates/`, `schemes/`) live in
 `configs/colourme/` and are symlinked out-of-store to `~/.config/colourme` so
 they stay live-editable. Defaults (so apps don't depend on colourme) are
@@ -252,6 +284,19 @@ parent-dir creation) and a colourme flake.
 
 Full plan: [THEME-PIPELINE.md](./THEME-PIPELINE.md). Required colourme changes
 are specified in that repo's `INTERFACE_CHANGES.md`.
+
+### D31 — Fonts vendored in-repo; Adwaita shapes everywhere (settled)
+Fonts are vendored under `fonts/` in this repo (self-contained; `~/dotfiles`
+may be deprecated) and symlinked out-of-store into `~/.local/share/fonts`, so
+the ~134 MB never enters the Nix store. Set: SF Pro Text/Display, SF Mono,
+SymbolsNerdFont, Roboto, Inter, Ubuntu. SF is the *LitheDE UI face only*, not a
+global fontconfig preference. The blanket
+`~/.local/share/fonts -> ~/dotfiles/fonts` stow symlink is dropped.
+
+Toolkit cohesion favours **identical widget shapes over a literal macOS look**:
+GTK3 uses `adw-gtk3`, GTK4/libadwaita uses Adwaita (+ colourme overrides),
+Qt uses `adwaita-qt6`. Icons/cursors are WhiteSur (art, independent of shape).
+
 
 ---
 

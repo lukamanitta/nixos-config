@@ -1,0 +1,22 @@
+/*
+ * GTK3 colour overrides, rendered by colourme into
+ * ~/.config/gtk-3.0/colourme-gtk.css and @import-ed by the Nix-owned gtk.css.
+ * Overrides the adw-gtk3 (Adwaita-shaped) theme's named colours.
+ */
+@define-color theme_bg_color #{{hex: base00 || hex: background}};
+@define-color theme_fg_color #{{hex: base05 || hex: foreground}};
+@define-color theme_base_color #{{hex: base11 || hex: base00 || hex: background}};
+@define-color theme_text_color #{{hex: base05 || hex: foreground}};
+@define-color theme_selected_bg_color #{{hex: accent}};
+@define-color theme_selected_fg_color #{{hex: base00 || hex: background}};
+@define-color theme_unfocused_bg_color #{{hex: base00 || hex: background}};
+@define-color theme_unfocused_fg_color #{{hex: base04 || hex: foreground}};
+@define-color insensitive_bg_color #{{hex: base01 || hex: background}};
+@define-color insensitive_fg_color #{{hex: base04 || hex: foreground}};
+@define-color borders #{{hex: base02 || hex: base01}};
+@define-color unfocused_borders #{{hex: base01 || hex: background}};
+@define-color content_view_bg #{{hex: base11 || hex: base00 || hex: background}};
+@define-color wm_bg #{{hex: base01 || hex: background}};
+@define-color wm_bg_backdrop #{{hex: base00 || hex: background}};
+@define-color wm_title #{{hex: base05 || hex: foreground}};
+@define-color wm_title_backdrop #{{hex: base04 || hex: foreground}};

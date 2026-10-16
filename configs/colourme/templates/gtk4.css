@@ -1,0 +1,35 @@
+/*
+ * GTK4 / libadwaita colour overrides, rendered by colourme into
+ * ~/.config/gtk-4.0/colourme-gtk.css and @import-ed by the Nix-owned
+ * gtk.css / gtk-dark.css. libadwaita apps honour these named colours even
+ * though they ignore the GTK theme name. NB: the exact set of names churns
+ * across libadwaita releases — re-check when bumping GTK.
+ */
+@define-color accent_color #{{hex: accent}};
+@define-color accent_bg_color #{{hex: accent}};
+@define-color accent_fg_color #{{hex: base00 || hex: background}};
+
+@define-color window_bg_color #{{hex: base00 || hex: background}};
+@define-color window_fg_color #{{hex: base05 || hex: foreground}};
+@define-color view_bg_color #{{hex: base11 || hex: base00 || hex: background}};
+@define-color view_fg_color #{{hex: base05 || hex: foreground}};
+
+@define-color headerbar_bg_color #{{hex: base01 || hex: background}};
+@define-color headerbar_fg_color #{{hex: base05 || hex: foreground}};
+@define-color headerbar_backdrop_color #{{hex: base00 || hex: background}};
+@define-color headerbar_shade_color #{{hex: base02 || hex: base01}};
+
+@define-color popover_bg_color #{{hex: base01 || hex: background}};
+@define-color popover_fg_color #{{hex: base05 || hex: foreground}};
+
+@define-color card_bg_color #{{hex: base01 || hex: background}};
+@define-color card_fg_color #{{hex: base05 || hex: foreground}};
+@define-color dialog_bg_color #{{hex: base00 || hex: background}};
+@define-color dialog_fg_color #{{hex: base05 || hex: foreground}};
+
+@define-color sidebar_bg_color #{{hex: base01 || hex: background}};
+@define-color sidebar_fg_color #{{hex: base05 || hex: foreground}};
+@define-color sidebar_backdrop_color #{{hex: base00 || hex: background}};
+
+@define-color shade_color #{{hex: base02 || hex: base01}};
+@define-color scrollbar_outline_color #{{hex: base02 || hex: base01}};

@@ -1,15 +1,17 @@
 { lib, pkgs, ... }:
 
+# Shared compositor feature. Owns everything DE-agnostic: variables, binds,
+# monitors, workspace/window rules, env, autostart. The visual half of the
+# config (general/decoration/group/animations) belongs to each DE — see
+# modules/users/desktops/<slug>/.
 {
   imports = [
-    ../hyprland-ecosystem.nix
     ./variables.nix
     ./settings.nix
     ./binds
     ./monitors.nix
     ./workspacerules.nix
     ./env.nix
-    ./animations.nix
     ./windowrules.nix
     ./autostart.nix
   ];

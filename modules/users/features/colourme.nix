@@ -50,6 +50,12 @@ in
           "$HOME/.config/ghostty/themes/Luka"
         _seed_colourme ${defaultThemes}/.local/state/colourme/colours.json \
           "$HOME/.local/state/colourme/colours.json"
+        _seed_colourme ${defaultThemes}/.config/gtk-3.0/colourme-gtk.css \
+          "$HOME/.config/gtk-3.0/colourme-gtk.css"
+        _seed_colourme ${defaultThemes}/.config/gtk-4.0/colourme-gtk.css \
+          "$HOME/.config/gtk-4.0/colourme-gtk.css"
+        _seed_colourme ${defaultThemes}/.config/waybar/colourme-waybar.css \
+          "$HOME/.config/waybar/colourme-waybar.css"
       '';
   };
 }

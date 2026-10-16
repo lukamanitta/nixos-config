@@ -1,51 +1,9 @@
-{ lib, ... }:
+{ ... }:
 
+# DE-agnostic Hyprland settings. Visual settings (general/decoration/group)
+# and animations live with each DE under modules/users/desktops/<slug>/.
 {
   wayland.windowManager.hyprland.settings.config = {
-    general = {
-      gaps_in = 4;
-      gaps_out = {
-        top = 3;
-        right = 8;
-        bottom = 8;
-        left = 8;
-      };
-      border_size = 2;
-      resize_on_border = false;
-      allow_tearing = false;
-      layout = "dwindle";
-      col.active_border = lib.generators.mkLuaInline ''require("theme.colourme").activeBorderColor'';
-    };
-
-    decoration = {
-      rounding = 8;
-      rounding_power = 2;
-      active_opacity = 1.0;
-      inactive_opacity = 0.96;
-      blur = {
-        enabled = true;
-        size = 3;
-        passes = 1;
-        vibrancy = 0.1696;
-      };
-      shadow = {
-        color = "rgba(15, 15, 15, 0.6)";
-        color_inactive = "rgba(15, 15, 15, 0.3)";
-        offset = [
-          2
-          2
-        ];
-        range = 11;
-        render_power = 2;
-      };
-    };
-
-    group.col.border_active = lib.generators.mkLuaInline ''require("theme.colourme").activeBorderColor'';
-
-    animations = {
-      enabled = true;
-    };
-
     master = {
       new_status = "master";
     };

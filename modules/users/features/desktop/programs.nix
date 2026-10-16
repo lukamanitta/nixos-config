@@ -53,6 +53,11 @@
         default = null;
         description = "Notification daemon command.";
       };
+      osd = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "On-screen display command (volume/brightness feedback).";
+      };
       wallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;

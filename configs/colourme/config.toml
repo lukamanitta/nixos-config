@@ -11,3 +11,16 @@ post_hook = "pkill -USR2 ghostty"
 [quickshell]
 template = "templates/quickshell.json"
 destination = "~/.local/state/colourme/colours.json"
+
+[gtk3]
+template = "templates/gtk3.css"
+destination = "~/.config/gtk-3.0/colourme-gtk.css"
+
+[gtk4]
+template = "templates/gtk4.css"
+destination = "~/.config/gtk-4.0/colourme-gtk.css"
+
+[waybar]
+template = "templates/waybar.css"
+destination = "~/.config/waybar/colourme-waybar.css"
+post_hook = "pkill -USR2 waybar"

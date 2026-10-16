@@ -8,6 +8,7 @@ let
     ++ lib.optional (services.clipboardWatcher != null) services.clipboardWatcher
     ++ lib.optional (services.idle != null) services.idle
     ++ lib.optional (services.notification != null) services.notification
+    ++ lib.optional (services.osd != null) services.osd
     ++ lib.optional (services.wallpaper != null) services.wallpaper
     ++ lib.optional (services.statusBar != null) services.statusBar
     ++ lib.optional (services.removableMedia != null) services.removableMedia;
