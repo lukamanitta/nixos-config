@@ -123,6 +123,20 @@ the feature that owns the tool, not in the hyprland feature:
 `pillKeyboard` is not a role; it is quickshell-Pill-specific and belongs to the
 quickshell feature.
 
+### D32 — hyprbars buttons need the plugin Lua API, loaded at parse time (settled)
+With Home Manager's Lua config type (`configType = "lua"`), hyprbars 0.55
+registers *only* the Lua API `hl.plugin.hyprbars.add_button`; the
+`hyprbars-button` config keyword is registered only for `CONFIG_LEGACY`. The
+previous approach — `hyprctl keyword 'plugin:hyprbars:hyprbars-button' …` at
+`hyprland.start` — was therefore a silent no-op: the bars rendered (bar config
+values are still registered) but no buttons ever appeared. HM loads plugin
+*packages* after the config is parsed (an async `hyprctl plugin load` in the
+`hyprland.start` hook), so the Lua function does not exist at config scope.
+Fix: load the plugin at parse time with `hl.plugin.load` (Hyprland then loads it
+and reloads the config; this is the API upstream HM later adopted for its plugin
+option) and register the buttons behind an `if hl.plugin.hyprbars ~= nil` guard,
+so the reload that follows the load actually adds them.
+
 ---
 
 ## Session / display manager

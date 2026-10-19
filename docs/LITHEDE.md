@@ -179,8 +179,12 @@ dedicated `services.controlCenter` role is not needed.
 
 **`hyprbars`** (official plugin), sourced from **`pkgs.hyprlandPlugins.hyprbars`**
 (built against the pinned nixpkgs Hyprland — avoids the flake/version-lock
-pitfall). Adds macOS-style title bars with close/min/max buttons approximated as
-coloured circles via `hyprbars-button = bgcolor,size,icon,on-click`. Gated
+pitfall). Adds macOS-style title bars with close/float/fullscreen buttons as
+coloured circles. hyprbars 0.55 registers the `hyprbars-button` keyword only for
+legacy configs; under the Lua config type buttons exist only via the plugin's
+Lua API (`hl.plugin.hyprbars.add_button`). The plugin is therefore loaded at
+config-parse time with `hl.plugin.load`, and the buttons are registered behind a
+`hl.plugin.hyprbars ~= nil` guard (see `windowcontrols.nix`). Gated
 behind `my.desktops.lithe.windowControls`. **Risk:** plugins are version-locked;
 a Hyprland bump can break the session — acceptable for personal machines, called
 out for any future "reliable baseline".
@@ -285,8 +289,9 @@ modules/users/desktops/lithe/
    and the GTK `@import` shells; wired `adw-gtk3` + `adwaita-qt6`.
 5. ✅ LitheDE programs: waybar, hyprlock, hyprlauncher, swaync, swayosd,
    thunar, hyprshot, cliphist; new `services.osd` role.
-6. ✅ `hyprbars` window controls via a chained `hyprctl` command at
-   `hyprland.start` (avoids HM's plugin-load ordering).
+6. ✅ `hyprbars` window controls: the plugin is loaded at config-parse time via
+   `hl.plugin.load` (HM loads plugin packages only *after* the config is
+   parsed), and buttons are added with the plugin's Lua API behind a nil-guard.
 7. ✅ Docs updated (D22 superseded, D29–D31; ROADMAP desktop section).
 
 ### Remaining follow-ups

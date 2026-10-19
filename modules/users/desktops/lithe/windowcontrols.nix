@@ -5,39 +5,28 @@
   ...
 }:
 
-# LitheDE window controls: hyprbars server-side title bars with
-# close/float/fullscreen buttons (macOS-ish traffic lights). Gated on
+# LitheDE window controls: hyprbars title bars with close/float/fullscreen
+# buttons (macOS-ish traffic lights). Gated on
 # `my.desktops.lithe.windowControls` because the plugin is version-locked to
 # Hyprland (docs/LITHEDE.md risks).
 #
-# The plugin is loaded and configured at `hyprland.start` via a single chained
-# `hyprctl` command. We deliberately do NOT use HM's `plugins` option or
-# `hl.plugin.hyprbars.add_button`: HM loads plugins in the `hyprland.start`
-# hook, so config-scope plugin calls would run before the plugin exists.
+# hyprbars 0.55 dropped the `hyprbars-button` config keyword: buttons are only
+# added through the plugin's Lua API (`hl.plugin.hyprbars.add_button`), which
+# exists only once the plugin is loaded. Home Manager loads plugin packages
+# *after* the config is parsed — in the `hyprland.start` hook, as an async
+# `hyprctl plugin load` — so we load the plugin ourselves at config-parse time
+# with `hl.plugin.load(...)` (deterministic; this is what upstream HM later
+# adopted). The buttons sit behind a nil-guard: the first parse schedules the
+# load (guard false), then the reload that follows the load re-runs this block
+# with the plugin present and actually registers the buttons.
 let
   enabled = config.my.desktops.environment == "lithe";
   t = config.my.desktops.lithe.tokens;
 
   hyprbars = pkgs.hyprlandPlugins.hyprbars;
+  hyprbarsPath = "${hyprbars}/lib/lib${hyprbars.pname}.so";
 
-  kw = path: value: "hyprctl keyword 'plugin:hyprbars:${path}' '${value}'";
-  btn =
-    bg: icon: action:
-    "hyprctl keyword 'plugin:hyprbars:hyprbars-button' 'rgb(${bg}), 10, ${icon}, ${action}'";
-
-  cmd = lib.concatStringsSep " && " [
-    "hyprctl plugin load '${hyprbars}/lib/libhyprbars.so'"
-    (kw "bar_height" "28")
-    (kw "bar_blur" "1")
-    (kw "bar_padding" "${toString t.space.sm}")
-    (kw "bar_button_padding" "${toString t.space.xs}")
-    (kw "bar_buttons_alignment" "left")
-    (kw "icon_on_hover" "1")
-    (kw "on_double_click" "hyprctl dispatch fullscreen 1")
-    (btn "ff5f57" "x" "hyprctl dispatch killactive")
-    (btn "febc2e" "-" "hyprctl dispatch togglefloating")
-    (btn "28c840" "+" "hyprctl dispatch fullscreen 1")
-  ];
+  toLua = lib.generators.toLua { };
 in
 {
   options.my.desktops.lithe.windowControls = lib.mkOption {
@@ -47,6 +36,28 @@ in
   };
 
   config = lib.mkIf (enabled && config.my.desktops.lithe.windowControls) {
-    my.hyprland.autostart = lib.mkAfter [ cmd ];
+    wayland.windowManager.hyprland.extraConfig = ''
+      hl.plugin.load(${toLua hyprbarsPath})
+
+      if hl.plugin.hyprbars ~= nil then
+        hl.config({
+          plugin = {
+            hyprbars = {
+              bar_height = 28,
+              bar_blur = true,
+              bar_padding = ${toString t.space.sm},
+              bar_button_padding = ${toString t.space.xs},
+              bar_buttons_alignment = "left",
+              icon_on_hover = true,
+              on_double_click = "hyprctl dispatch fullscreen 1",
+            },
+          },
+        })
+
+        hl.plugin.hyprbars.add_button({ bg_color = "rgb(ff5f57)", fg_color = "rgb(000000)", size = 10, icon = "x", action = "hyprctl dispatch killactive" })
+        hl.plugin.hyprbars.add_button({ bg_color = "rgb(febc2e)", fg_color = "rgb(000000)", size = 10, icon = "-", action = "hyprctl dispatch togglefloating" })
+        hl.plugin.hyprbars.add_button({ bg_color = "rgb(28c840)", fg_color = "rgb(000000)", size = 10, icon = "+", action = "hyprctl dispatch fullscreen 1" })
+      end
+    '';
   };
 }
