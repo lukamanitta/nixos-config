@@ -225,9 +225,12 @@ out for any future "reliable baseline".
 
 ### Icons & cursors
 
-- **`whitesur-icon-theme`** (alt / redesigned macOS variant) and
-  **`whitesur-cursor-theme`**. Icons/cursors are art, independent of the Adwaita
-  widget-shape decision.
+- **`whitesur-icon-theme`** built with
+  `override { alternativeIcons = true; boldPanelIcons = true; }` (the redesigned
+  artwork, not the literal macOS icon copies) and **`whitesur-cursors`**.
+  Icons/cursors are art, independent of the Adwaita widget-shape decision.
+  Verified installed names: `WhiteSur`, `WhiteSur-dark`, `WhiteSur-light`;
+  cursor theme `WhiteSur-cursors`.
 
 ### Toolkit theming
 
@@ -305,7 +308,6 @@ modules/users/desktops/lithe/
 
 - swaync `style.css` theming; hyprlauncher `config`/theme; Qt `qt6ct` colourme
   seam; network *joining* UX (nm-applet vs a picker); real traffic-light glyphs;
-  verify the WhiteSur icon/cursor theme *names* resolve (else icons fall back);
   `toString` float formatting (`0.800000` → `0.8`); unstow the old fonts symlink
   (`stow -D fonts`) on machines using the dotfiles tree.
 

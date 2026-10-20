@@ -12,6 +12,13 @@ let
   enabled = config.my.desktops.environment == "lithe";
   t = config.my.desktops.lithe.tokens;
 
+  # The alternative set is the redesigned WhiteSur artwork (not the literal
+  # macOS icon copies); bold panel icons match LitheDE's heavier UI face.
+  whitesurIcons = pkgs.whitesur-icon-theme.override {
+    alternativeIcons = true;
+    boldPanelIcons = true;
+  };
+
   # libadwaita/GTK4 read user CSS here; the colours themselves are written by
   # colourme at runtime into the imported file (the D27 seam).
   gtkCssImport = ''@import url("colourme-gtk.css");'' + "\n";
@@ -20,7 +27,7 @@ in
   config = lib.mkIf enabled {
     home.packages = with pkgs; [
       adw-gtk3
-      whitesur-icon-theme
+      whitesurIcons
       whitesur-cursors
       adwaita-qt6
       qt6Packages.qt6ct
@@ -34,7 +41,7 @@ in
       };
       iconTheme = {
         name = "WhiteSur-dark";
-        package = pkgs.whitesur-icon-theme;
+        package = whitesurIcons;
       };
       cursorTheme = {
         name = "WhiteSur-cursors";
