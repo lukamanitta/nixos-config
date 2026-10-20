@@ -57,7 +57,7 @@ around it.
       hyprlauncher/thunar), colourme.
 - [ ] Dev environment: `nix develop` dev shells primary, `mise` fallback,
       retire `asdf`.
-- [ ] AI agent parity: opencode + skills.
+- [x] AI agent parity: opencode + skills.
 - [ ] Non-Nix workflow validation spike (dotfiles + HM standalone).
 
 ### Later
@@ -144,7 +144,7 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
 ### Development environment
 - [ ] Per-project `nix develop` dev shells as the primary mechanism.
 - [ ] `mise` as the cross-platform fallback; retire `asdf` and `.tool-versions`.
-- [ ] AI tooling parity (opencode + skills).
+- [x] AI tooling parity (opencode + skills).
 - Dev shells are the natural precursor to per-project dendritic modules.
 
 ### Neovim composability
@@ -191,7 +191,7 @@ Endgame, gated by the parity checklist below.
 
 - [ ] Terminal (ghostty/tmux/fish) at parity
 - [ ] Editor + LSPs (Neovim) at parity
-- [ ] AI agent setup (opencode + skills) at parity
+- [x] AI agent setup (opencode + skills) at parity
 - [ ] Browser
 - [ ] Slack
 - [ ] Tailscale
