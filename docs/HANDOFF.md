@@ -30,31 +30,38 @@ DE-agnostic compositor feature.
 
 ## Current focus (user-raised, this session)
 
-### 1. hyprbars window buttons are missing
-Observed: the **bars themselves render** (plugin loaded, bar styling applied),
-but **no close/float/fullscreen buttons**. Implementation is
-`modules/users/desktops/lithe/windowcontrols.nix`: at `hyprland.start` it runs a
-chained `hyprctl plugin load … && hyprctl keyword 'plugin:hyprbars:<opt>' …`,
-including three `hyprctl keyword 'plugin:hyprbars:hyprbars-button' 'rgb(..), 10, x, hyprctl dispatch killactive'`.
+### 1. hyprbars window buttons — FIXED, needs live verification
+**Status:** fixed in this session (`modules/users/desktops/lithe/windowcontrols.nix`),
+not yet verified on the VM. Recorded in `docs/DECISIONS.md` **D32**.
 
-Why it was done this way: HM loads plugins in the `hyprland.start` hook, so the
-documented Lua `hl.plugin.hyprbars.add_button` at config scope runs *before* the
-plugin exists. Since bar options evidently applied but buttons did not, the
-leading hypotheses are:
-- `hyprbars-button` may only take effect when set at config-parse time (or
-  before a window is mapped), not via `hyprctl keyword` after start.
-- The `hyprbars-button` value/format via `hyprctl keyword` may be parsed
-  differently than in-config.
-- Keyword path may differ (verify with `hyprctl plugin list` and by setting one
-  button by hand).
+**Cause (buttons missing):** with `configType = "lua"`, hyprbars 0.55 registers
+the `hyprbars-button` keyword *only* for `CONFIG_LEGACY`
+(`if Config::mgr()->type() == CONFIG_LEGACY … else addLuaFunction("hyprbars",
+"add_button", …)`). The old
+`hyprctl keyword 'plugin:hyprbars:hyprbars-button' '…'` calls were therefore
+silent no-ops; the bars rendered because the bar *options* are ordinary config
+values.
 
-Next steps: reproduce on the VM, inspect `hyprctl plugin list` / logs, and try
-one (or more) of: (a) a Lua `hl.on("hyprland.start", …)` callback that calls
-`hl.plugin.hyprbars.add_button(...)` (ordering vs HM's own start command is the
-risk); (b) find a way to load the plugin at config-parse time; (c) a chained
-shell command that runs `hyprctl plugin load` then `hyprctl keyword` for
-buttons, confirming the exact keyword string. Plugin package:
-`pkgs.hyprlandPlugins.hyprbars` (store shows `hyprbars-0.55.0`).
+**Cause (buttons appear but do nothing):** under the Lua config type
+`hyprctl dispatch` is shorthand for `hl.dispatch(...)` (HyprCtl.cpp:1108), so
+the legacy action names (`killactive`, `togglefloating`, `fullscreen`) are
+invalid Lua — the click fires and the executor runs `hyprctl dispatch killactive`,
+which silently fails. Same upstream issue as hyprland-plugins#676.
+
+**Fix:** load the plugin at config-parse time with `hl.plugin.load(...)` (HM only
+loads plugin *packages* after parse, in the `hyprland.start` hook, as an async
+`hyprctl plugin load`), register buttons via `hl.plugin.hyprbars.add_button(...)`
+behind an `if hl.plugin.hyprbars ~= nil` guard, and express actions with the Lua
+dispatch API: `hyprctl dispatch 'hl.dsp.window.close()'`,
+`'…float({ action = "toggle" })'`, `'…fullscreen({ action = "toggle" })'`.
+
+**Colours:** the buttons read `failure`/`warning`/`success` from the active
+colourme scheme (the glyph uses `background`); `warning` was added to
+`configs/colourme/templates/hypr.lua` (`base0A || regular.yellow || #febc2e`).
+
+**Verify on VM:** buttons appear and close/float/fullscreen work; also check
+`on_double_click`. Plugin package: `pkgs.hyprlandPlugins.hyprbars`
+(`hyprbars-0.55.0`).
 
 ### 2. hyprlauncher and hyprlock are unstyled
 - **hyprlauncher `0.1.6`**: config is hyprlang found via
@@ -81,13 +88,12 @@ Options to weigh: drop `wlr/taskbar` (workspaces only), or replace `workspaces`
 with a taskbar/dock, or a left "focused-window" pill only, etc. Capture the
 outcome in `docs/LITHEDE.md`.
 
-### 4. Icons are the literal macOS set, not the redesigned variant
-`toolkit.nix` uses `pkgs.whitesur-icon-theme` with theme name `WhiteSur-dark`.
-nixpkgs' derivation supports an override:
-`pkgs.whitesur-icon-theme.override { alternativeIcons = true; }` (and
-`boldPanelIcons = true` for bold panel icons) — that is the redesigned set the
-user wants. Theme names remain `WhiteSur` / `WhiteSur-dark` / `WhiteSur-light`.
-Cursor theme name is confirmed `WhiteSur-cursors` (`pkgs.whitesur-cursors`).
+### 4. Icons are the literal macOS set, not the redesigned variant — DONE
+`toolkit.nix` now builds `pkgs.whitesur-icon-theme` with
+`override { alternativeIcons = true; boldPanelIcons = true; }` (the redesigned
+set) and uses it for both the package and `gtk.iconTheme.package`. Verified the
+built theme names: `WhiteSur` / `WhiteSur-dark` / `WhiteSur-light`; cursor theme
+`WhiteSur-cursors` (`pkgs.whitesur-cursors`). Not yet seen live on the VM.
 
 ### 5. First-boot colourme race (may already be fine)
 User saw `module 'theme.colourme' not found` on first login; it was **gone after
@@ -98,9 +104,10 @@ packaged tool — all six seams — and it exits 0.)
 
 ## Other backlog
 
-- **New task (user):** add the user's **opencode skills/config to the opencode
-  feature** (`modules/users/features/opencode.nix`). `~/dotfiles/opencode/`
-  exists and `~/.config/opencode/skills/*` are installed on the machine.
+- **DONE — opencode skills/config:** the dotfiles opencode config and skills
+  now live in `configs/opencode/` (`opencode.jsonc`, `cli.json`, `skills/`,
+  `commands/`) and `modules/users/features/opencode.nix` symlinks them
+  out-of-store (D25). `node_modules`/`package*.json` stay unmanaged.
 - Already-listed follow-ups: see `docs/LITHEDE.md` § "Remaining follow-ups".
 
 ## Environment facts
