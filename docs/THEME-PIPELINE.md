@@ -119,6 +119,11 @@ Apply to every colour value: `col.active_border` (L17), shadow `color` /
 `color_inactive` (L32–33), `group.col.border_active` (L43). The `hypr.lua`
 template returns a table whose keys match. Reload stays a `post_hook`.
 
+LitheDE's `hyprbars` window-control buttons reuse this seam: they read
+`failure`/`warning`/`success` (and `background` for the glyph) from
+`require("theme.colourme")`, so the traffic-light colours follow the scheme. The
+`warning` key was added to the template (`base0A` → ANSI yellow → `#febc2e`).
+
 ### Ghostty
 
 Keep the hand-rolled `xdg.configFile."ghostty/config".text` (avoids churn in

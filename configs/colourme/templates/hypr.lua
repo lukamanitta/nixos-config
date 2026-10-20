@@ -5,5 +5,6 @@ return {
     background = "rgba({{hexa: base11 || hexa: base00 || hexa: background}})",
     foreground = "rgba({{hexa: base04 || hexa: foreground}})",
     success = "rgba({{hexa: base0B || hexa: regular.green}})",
+    warning = "rgba({{hexa: base0A || hexa: regular.yellow || hexa: #febc2e}})",
     failure = "rgba({{hexa: base08 || hexa: regular.red}})",
 }

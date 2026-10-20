@@ -137,6 +137,16 @@ and reloads the config; this is the API upstream HM later adopted for its plugin
 option) and register the buttons behind an `if hl.plugin.hyprbars ~= nil` guard,
 so the reload that follows the load actually adds them.
 
+Button *actions* carry a second Lua-era gotcha: under `CONFIG_LUA`,
+`hyprctl dispatch` is a shorthand for `hl.dispatch(...)` (HyprCtl.cpp), so
+legacy dispatcher names (`killactive`, `togglefloating`, `fullscreen`) evaluate
+as invalid Lua and the click silently does nothing. Actions must use the Lua
+dispatch form, e.g. `hyprctl dispatch 'hl.dsp.window.close()'` and
+`'hl.dsp.window.float({ action = "toggle" })'`. Upstream:
+hyprland-plugins#676. Colours are not hardcoded — the buttons read
+`failure`/`warning`/`success` from `require("theme.colourme")` (the `warning`
+key was added to the hypr template), so they retheme with the scheme.
+
 ---
 
 ## Session / display manager

@@ -184,8 +184,15 @@ coloured circles. hyprbars 0.55 registers the `hyprbars-button` keyword only for
 legacy configs; under the Lua config type buttons exist only via the plugin's
 Lua API (`hl.plugin.hyprbars.add_button`). The plugin is therefore loaded at
 config-parse time with `hl.plugin.load`, and the buttons are registered behind a
-`hl.plugin.hyprbars ~= nil` guard (see `windowcontrols.nix`). Gated
-behind `my.desktops.lithe.windowControls`. **Risk:** plugins are version-locked;
+`hl.plugin.hyprbars ~= nil` guard (see `windowcontrols.nix`). Button actions
+must use the Lua dispatch API (`hyprctl dispatch 'hl.dsp.window.close()'`):
+under the Lua config type `hyprctl dispatch` is shorthand for `hl.dispatch(...)`,
+so legacy dispatcher names (`killactive`, `togglefloating`, `fullscreen`) are
+invalid Lua and silently do nothing. Button colours come from the active
+colourme scheme (`failure` red, `warning` yellow, `success` green; the `warning`
+key is added to the Hyprland colourme template), so they retheme with
+`colourme <scheme>`. Gated behind
+`my.desktops.lithe.windowControls`. **Risk:** plugins are version-locked;
 a Hyprland bump can break the session — acceptable for personal machines, called
 out for any future "reliable baseline".
 
