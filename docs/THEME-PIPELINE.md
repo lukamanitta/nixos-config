@@ -177,21 +177,28 @@ hermetically from the same templates, then copy them in only if missing.
    `$out/.local/state/colourme/colours.json`.
 
 2. **Seed (activation).** A `home.activation` step copies each default to its
-   runtime path **only if absent**, so rebuilds never clobber the live theme:
+   runtime path. A per-file **stamp** in
+   `~/.local/state/colourme/seeded/` holds the bytes last seeded, so the step
+   distinguishes "still the default" from "written by colourme":
 
-   ```nix
-   home.activation.seedColourmeTheme =
-     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-       seed() {
-         [ -e "$1" ] || "$DRY_RUN_CMD" install -Dm644 "$2" "$1"
-       }
-       seed "$HOME/.config/hypr/theme/colourme.lua"      "${defaults}/.config/hypr/theme/colourme.lua"
-       seed "$HOME/.config/ghostty/themes/Luka"          "${defaults}/.config/ghostty/themes/Luka"
-       seed "$HOME/.local/state/colourme/colours.json"   "${defaults}/.local/state/colourme/colours.json"
-     '';
+   - absent runtime file → install the default and record the stamp;
+   - runtime file byte-identical to its stamp → refresh from the current
+     default (template/`defaultScheme` changes propagate on rebuild);
+   - runtime file differs from its stamp → leave it alone (colourme owns it).
+
+   ```sh
+   seed() {
+     if [ ! -e "$dst" ]; then
+       install -Dm644 "$src" "$dst"; install -Dm644 "$src" "$stamp"
+     elif cmp -s "$dst" "$stamp"; then        # still seed-owned
+       install -Dm644 "$src" "$dst"; install -Dm644 "$src" "$stamp"
+     fi                                        # else: colourme owns it
+   }
    ```
 
-   (`install -D` also handles the parent dirs.)
+   The first activation after the stamp mechanism was introduced backs the
+   pre-existing file up to `<stamp>.pre-stamp`, then treats it as seed-owned
+   once. (`install -D` also handles the parent dirs.)
 
 3. **Default scheme is a Nix option:** `my.theme.defaultScheme` (default e.g.
    `"Gruvbox"`), so the choice is declarative and reviewable.

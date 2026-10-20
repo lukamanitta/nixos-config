@@ -47,8 +47,14 @@ in
       if hl.plugin.hyprbars ~= nil then
         -- Traffic-light colours from the active colourme scheme: red=failure,
         -- yellow=warning, green=success; the glyph uses the scheme background
-        -- for contrast.
+        -- for contrast. Fall back to the stock macOS colours when the runtime
+        -- theme predates a key (the activation seed does not overwrite an
+        -- existing colourme.lua), so a stale theme cannot break the config.
         local colours = require("theme.colourme")
+        local red = colours.failure or "rgb(ff5f57)"
+        local yellow = colours.warning or "rgb(febc2e)"
+        local green = colours.success or "rgb(28c840)"
+        local glyph = colours.background or "rgb(000000)"
 
         hl.config({
           plugin = {
@@ -68,9 +74,9 @@ in
           },
         })
 
-        hl.plugin.hyprbars.add_button({ bg_color = colours.failure, fg_color = colours.background, size = 10, icon = "x", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
-        hl.plugin.hyprbars.add_button({ bg_color = colours.warning, fg_color = colours.background, size = 10, icon = "-", action = [[hyprctl dispatch 'hl.dsp.window.float({ action = "toggle" })']] })
-        hl.plugin.hyprbars.add_button({ bg_color = colours.success, fg_color = colours.background, size = 10, icon = "+", action = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ action = "toggle" })']] })
+        hl.plugin.hyprbars.add_button({ bg_color = red, fg_color = glyph, size = 10, icon = "x", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
+        hl.plugin.hyprbars.add_button({ bg_color = yellow, fg_color = glyph, size = 10, icon = "-", action = [[hyprctl dispatch 'hl.dsp.window.float({ action = "toggle" })']] })
+        hl.plugin.hyprbars.add_button({ bg_color = green, fg_color = glyph, size = 10, icon = "+", action = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ action = "toggle" })']] })
       end
     '';
   };

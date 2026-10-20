@@ -191,7 +191,8 @@ so legacy dispatcher names (`killactive`, `togglefloating`, `fullscreen`) are
 invalid Lua and silently do nothing. Button colours come from the active
 colourme scheme (`failure` red, `warning` yellow, `success` green; the `warning`
 key is added to the Hyprland colourme template), so they retheme with
-`colourme <scheme>`. Gated behind
+`colourme <scheme>`. Missing keys fall back to the stock macOS colours, so a
+colourme-owned theme predating a template key cannot break the config. Gated behind
 `my.desktops.lithe.windowControls`. **Risk:** plugins are version-locked;
 a Hyprland bump can break the session — acceptable for personal machines, called
 out for any future "reliable baseline".

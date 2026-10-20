@@ -102,6 +102,12 @@ if real, ensuring the theme file exists before the first Hyprland session.
 (The colourme build-time render itself is healthy: reproduced locally with the
 packaged tool — all six seams — and it exits 0.)
 
+The seed now stamps each runtime theme it writes (`~/.local/state/colourme/
+seeded/`), so a rebuild refreshes template/`defaultScheme` changes while the
+file is still seed-owned. The first activation after this change backs the old
+file up to `<stamp>.pre-stamp` and refreshes it once (this is what brings the
+new `warning` key to existing installs).
+
 ## Other backlog
 
 - **DONE — opencode skills/config:** the dotfiles opencode config and skills

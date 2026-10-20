@@ -145,7 +145,11 @@ dispatch form, e.g. `hyprctl dispatch 'hl.dsp.window.close()'` and
 `'hl.dsp.window.float({ action = "toggle" })'`. Upstream:
 hyprland-plugins#676. Colours are not hardcoded — the buttons read
 `failure`/`warning`/`success` from `require("theme.colourme")` (the `warning`
-key was added to the hypr template), so they retheme with the scheme.
+key was added to the hypr template), so they retheme with the scheme. The
+buttons fall back to the stock macOS colours when a key is absent. Seed-owned
+theme files are refreshed on rebuild, but a colourme-owned theme written before
+a template key was added keeps its own content; it must not break the config.
+Run `colourme <scheme>` to regenerate that file with `warning`.
 
 ---
 
@@ -300,9 +304,12 @@ colourme's inputs (`config.toml`, `templates/`, `schemes/`) live in
 `configs/colourme/` and are symlinked out-of-store to `~/.config/colourme` so
 they stay live-editable. Defaults (so apps don't depend on colourme) are
 rendered at build time from the same templates by a packaged colourme
-(`--no-hooks --dest-root`) and seeded at activation only if absent; the default
-scheme is a `my.theme.defaultScheme` option. colourme is a build input only,
-never installed. This requires colourme interface changes (`--config`,
+(`--no-hooks --dest-root`) and seeded at activation. Each seeded file has a
+stamp of the bytes last written: while the live file matches its stamp it is
+still seed-owned and is refreshed on rebuild (so template and `defaultScheme`
+changes propagate); once colourme writes a different theme it no longer
+matches and is left alone. The default scheme is a `my.theme.defaultScheme`
+option. colourme is a build input only, never installed. This requires colourme interface changes (`--config`,
 `--schemes-dir`, `--no-hooks`, `--dest-root`, relative-path resolution,
 parent-dir creation) and a colourme flake.
 
