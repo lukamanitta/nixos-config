@@ -35,6 +35,15 @@
         default = null;
         description = "Screen locker command (lock now).";
       };
+      multiplexer = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = ''
+          Command a new terminal surface runs instead of a login shell (a
+          multiplexer). Features that provide one set it; a normal-priority
+          value beats a `mkDefault` one, which is how tmux outranks herdr.
+        '';
+      };
     };
 
     services = {

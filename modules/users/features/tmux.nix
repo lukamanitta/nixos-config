@@ -1,5 +1,20 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
+let
+  # Ghostty's `command` takes a path with no arguments, so tmux gets a wrapper.
+  tmuxAttach = pkgs.writeShellApplication {
+    name = "tmux-attach";
+    runtimeInputs = [ pkgs.tmux ];
+    text = ''
+      exec tmux new-session -A -s main
+    '';
+  };
+in
 {
   home.packages = [ pkgs.tmux ];
 
@@ -7,15 +22,9 @@
   # configs/ and is symlinked out-of-store so it remains editable live.
   # Assumes the flake is checked out at ~/nixos-config (see docs/INSTALL.md).
   xdg.configFile."tmux/tmux.conf".source =
-    config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/nixos-config/configs/tmux/tmux.conf";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nixos-config/configs/tmux/tmux.conf";
 
-  # Auto-attach tmux when a ghostty surface opens, but only when ghostty is
-  # the configured terminal (i.e. the ghostty feature is in play). tmux
-  # contributes this directly to ghostty's config (DECISIONS D9).
-  xdg.configFile."ghostty/config".text =
-    lib.mkIf (config.my.desktop.programs.terminal == "ghostty")
-      (lib.mkAfter ''
-        command = $SHELL -c "tmux new-session -A -s main"
-      '');
+  # Normal priority: when the herdr feature is also imported it sets the same
+  # option with `mkDefault`, so tmux wins (DECISIONS D9).
+  my.desktop.programs.multiplexer = "${tmuxAttach}/bin/tmux-attach";
 }

@@ -1,0 +1,75 @@
+# Herdr configuration
+#
+# Ported from ~/.config/tmux/tmux.conf. The tmux prefix was ctrl+a there, but
+# Herdr deliberately keeps ctrl+b (its default) as the prefix.
+
+onboarding = false
+
+[terminal]
+# tmux splits and new windows inherited the current pane's directory.
+new_cwd = "follow"
+
+[keys]
+# Prefix: ctrl+b, matching Herdr's default.
+prefix = "ctrl+b"
+
+# tmux: bind r source-file ~/.config/tmux/tmux.conf
+reload_config = "prefix+r"
+
+# tmux has no resize mode (it resizes directly with alt+hjkl below), but keep
+# Herdr's resize mode available without taking prefix+r from reload.
+resize_mode = "prefix+shift+r"
+
+# tmux: bind c new-window
+new_tab = "prefix+c"
+
+# tmux: bind-key x kill-pane
+close_pane = "prefix+x"
+
+# tmux: bind / split-window -h  (side by side)
+# tmux: bind - split-window -v  (stacked)
+split_vertical = "prefix+/"
+split_horizontal = "prefix+minus"
+
+# tmux: vim-style pane switching with h/j/k/l
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+
+# tmux: bind -n M-h/j/k/l resize-pane
+resize_pane_left = "alt+h"
+resize_pane_down = "alt+j"
+resize_pane_up = "alt+k"
+resize_pane_right = "alt+l"
+
+# tmux: bind -n C-M-h/j/k/l swap-pane
+swap_pane_left = "ctrl+alt+h"
+swap_pane_down = "ctrl+alt+j"
+swap_pane_up = "ctrl+alt+k"
+swap_pane_right = "ctrl+alt+l"
+
+# tmux: bind f resize-pane -Z, bind Enter resize-pane -Z
+zoom = ["prefix+f", "prefix+enter"]
+
+# tmux: bind -r [ previous-window, bind -r ] next-window
+previous_tab = "prefix+["
+next_tab = "prefix+]"
+
+# tmux used prefix+[ for previous-window, so move Herdr's copy mode out of the
+# way instead of losing it.
+copy_mode = "prefix+space"
+
+# tmux: bind -r ( switch-client -p, bind -r ) switch-client -n
+# Workspaces are Herdr's closest equivalent to tmux sessions.
+# Also use shift+K / shift+J to go up / down the workspace list.
+previous_workspace = ["prefix+(", "prefix+shift+k"]
+next_workspace = ["prefix+)", "prefix+shift+j"]
+
+[ui]
+# tmux new-window creates a window immediately; skip Herdr's tab-name prompt.
+prompt_new_tab_name = false
+
+# Not ported: tmux layout presets (\\, =, +), send-prefix (a), status-bar
+# styling, and window-rename hooks. Herdr has no equivalent layout-preset
+# actions and manages its own status UI.

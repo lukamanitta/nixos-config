@@ -16,7 +16,7 @@
     ../desktops/lithe
     ../desktops/liquorice
     ../features/ghostty.nix
-    ../features/tmux.nix
+    ../features/herdr.nix
     ../features/zen-browser.nix
   ];
 

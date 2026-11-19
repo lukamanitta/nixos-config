@@ -423,3 +423,21 @@ Notifications`) and the OSD, so `services.notification` and `services.osd` stay
 `null`; `hypridle` and `hyprpaper` remain the idle/wallpaper providers with
 LiquoRice-specific configs. LitheDE's toolkit theming (GTK/Qt/icons) is
 per-DE and does not apply yet — LiquoRice starts unthemed at the toolkit layer.
+
+---
+
+## Terminal multiplexer
+
+### D35 — One multiplexer auto-attaches via a role, tmux outranks herdr (settled)
+Ghostty runs whatever `my.desktop.programs.multiplexer` points at instead of a
+login shell. Providers set the option at different priorities: the tmux feature
+sets it normally, herdr sets it with `mkDefault`. Importing both therefore
+attaches tmux; importing only herdr attaches herdr. Dropping the tmux feature
+from the user profile is what makes herdr the active multiplexer today — re-add
+the import to flip back.
+
+Herdr is packaged from its pinned release binary (`packages/herdr`) rather than
+the upstream flake: that flake builds from source against nixos-unstable with a
+pinned Rust/zig toolchain, which is a large rebuild for a static binary. The
+hash/version pair is documented in the package and taken from
+`https://herdr.dev/latest.json`; bump both together.
