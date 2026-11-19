@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 
 Singleton {
@@ -23,6 +24,7 @@ Singleton {
     property var heldIds: ({})
     property var closedHeld: ({})
     property bool historyLoaded: false
+    property int desktopTick: 0
     property string historyFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/quickshell-notif-history.json"
 
     readonly property var tracked: server.trackedNotifications.values
@@ -40,14 +42,15 @@ Singleton {
         var order = [];
         for (var i = 0; i < tracked.length; i++) {
             var n = tracked[i];
-            var app = (n.appName && n.appName.length) ? n.appName : "System";
+            var app = appLabel(n);
             if (map[app] === undefined) { map[app] = []; order.push(app); }
             map[app].push({ live: true, n: n, t: arrivalMs[n.id] || 0 });
         }
         for (var j = 0; j < history.length; j++) {
             var h = history[j];
-            if (map[h.app] === undefined) { map[h.app] = []; order.push(h.app); }
-            map[h.app].push({ live: false, n: h, t: h.ts || 0 });
+            var happ = historyLabel(h);
+            if (map[happ] === undefined) { map[happ] = []; order.push(happ); }
+            map[happ].push({ live: false, n: h, t: h.ts || 0 });
         }
         function coalesce(list, it) {
             var last = list.length > 0 ? list[list.length - 1] : null;
@@ -100,8 +103,37 @@ Singleton {
         return "";
     }
 
+    /**
+     * Display name for the app behind a notification. Flatpak/portal senders
+     * (Spotify, for instance) leave app_name empty by design and only set the
+     * desktop-entry hint, so resolve that to the entry's Name instead of
+     * collapsing every sandboxed app into "System".
+     */
+    function appLabel(n) {
+        void root.desktopTick;
+        if (!n) return "System";
+        if (n.appName && n.appName.length) return n.appName;
+        var id = (n.desktopEntry || "").replace(/\.desktop$/, "");
+        if (id.length) {
+            var entry = DesktopEntries.byId(id);
+            if (entry && entry.name && entry.name.length) return entry.name;
+            return id;
+        }
+        return "System";
+    }
+
     function appKey(n) {
-        return (n && n.appName && n.appName.length) ? n.appName : "System";
+        return appLabel(n);
+    }
+
+    /**
+     * History rows persist only the resolved label, so rows captured before the
+     * desktop-entry fallback existed still say "System". Re-resolve those from
+     * their stored desktopEntry instead.
+     */
+    function historyLabel(h) {
+        if (h.app && h.app !== "System") return h.app;
+        return appLabel(h);
     }
 
     function muteApp(app, ms) {
@@ -127,6 +159,33 @@ Singleton {
         void root.tick;
         var until = root.mutedApps[app];
         return until !== undefined && until > Date.now();
+    }
+
+    /**
+     * True for a player's own now-playing notification (Spotify sends one on
+     * every track change). The pill already flashes the track OSD for these, so
+     * the notification is a duplicate: dropping it also keeps it out of the
+     * history and the unread badge.
+     */
+    function isTrackAnnounce(n) {
+        if (!n || !n.summary)
+            return false;
+        var summary = String(n.summary);
+        var label = appLabel(n).toLowerCase();
+        var entry = String(n.desktopEntry || "").toLowerCase().replace(/\.desktop$/, "");
+        var l = Players.list;
+        for (var i = 0; i < l.length; i++) {
+            var p = l[i];
+            if (!p || !p.trackTitle || p.trackTitle !== summary)
+                continue;
+            var identity = String(p.identity || "").toLowerCase();
+            var pentry = String(p.desktopEntry || "").toLowerCase().replace(/\.desktop$/, "");
+            var appMatches = (identity.length > 0 && (label.indexOf(identity) >= 0 || identity.indexOf(label) >= 0))
+                || (pentry.length > 0 && (entry.indexOf(pentry) >= 0 || pentry.indexOf(entry) >= 0));
+            if (appMatches)
+                return true;
+        }
+        return false;
     }
 
     function dismissNotif(n) {
@@ -167,14 +226,66 @@ Singleton {
     /**
      * Focus the app's Hyprland window (workspace switch included) by matching the
      * notification's desktopEntry/appName against the live window classes.
+     *
+     * The old implementation forked `hyprctl clients -j | jq` on every open. The
+     * Hyprland model already carries the full client object, so match in-process:
+     * desktopEntry is often reverse-DNS (`app.zen_browser.zen`) while the class
+     * is the last segment (`zen`), so accept either spelling and prefer exact
+     * class matches. focusHistoryID breaks ties in favour of the window the user
+     * touched most recently.
      */
+    function windowFor(n) {
+        if (!n)
+            return null;
+        var token = String(n.desktopEntry && n.desktopEntry.length ? n.desktopEntry : (n.appName || ""))
+            .toLowerCase().replace(/\.desktop$/, "");
+        if (token.length === 0)
+            return null;
+        var short = token.indexOf(".") >= 0 ? token.substring(token.lastIndexOf(".") + 1) : token;
+
+        function scoreField(raw) {
+            var f = String(raw || "").toLowerCase();
+            if (f.length === 0)
+                return -1;
+            if (f === token || f === short)
+                return 3;
+            if (f.indexOf(token) >= 0)
+                return 2;
+            if (short.length >= 3 && f.indexOf(short) >= 0)
+                return 1;
+            return -1;
+        }
+
+        var tops = Hyprland.toplevels.values;
+        var best = null;
+        var bestScore = 0;
+        var bestFocus = 1e9;
+        for (var i = 0; i < tops.length; i++) {
+            var t = tops[i];
+            var ipc = t.lastIpcObject || {};
+            var score = Math.max(scoreField(ipc.class), scoreField(ipc.initialClass));
+            if (score < bestScore)
+                continue;
+            var focus = typeof ipc.focusHistoryID === "number" ? ipc.focusHistoryID : 1e9;
+            if (score === bestScore && focus >= bestFocus)
+                continue;
+            best = t;
+            bestScore = score;
+            bestFocus = focus;
+        }
+        return bestScore > 0 ? best : null;
+    }
+
     function raiseWindow(n) {
-        if (!n) return;
-        var token = String(n.desktopEntry && n.desktopEntry.length ? n.desktopEntry : (n.appName || "")).toLowerCase();
-        if (token.length === 0) return;
-        Quickshell.execDetached(["sh", "-c",
-            "addr=$(hyprctl clients -j | jq -r --arg q \"$1\" 'first(.[] | select(((.class | if . then ascii_downcase else \"\" end) | contains($q)) or ((.initialClass | if . then ascii_downcase else \"\" end) | contains($q))) | .address)'); [ -n \"$addr\" ] && hyprctl dispatch \"hl.dsp.focus({ window = \\\"address:$addr\\\" })\"",
-            "sh", token]);
+        var best = windowFor(n);
+        if (!best)
+            return;
+        var addr = String(best.address || "");
+        if (addr.length === 0)
+            return;
+        if (addr.indexOf("0x") !== 0)
+            addr = "0x" + addr;
+        Hyprland.dispatch('hl.dsp.focus({ window = "address:' + addr + '" })');
     }
 
     /**
@@ -202,7 +313,7 @@ Singleton {
 
     function dismissApp(app) {
         var doomed = tracked.filter(function(n) {
-            return ((n.appName && n.appName.length) ? n.appName : "System") === app;
+            return appLabel(n) === app;
         });
         var d = Object.assign({}, userDismissed);
         for (var i = 0; i < doomed.length; i++) {
@@ -212,7 +323,7 @@ Singleton {
         }
         root.userDismissed = d;
         for (var j = 0; j < doomed.length; j++) doomed[j].dismiss();
-        root.history = root.history.filter(function(h) { return h.app !== app; });
+        root.history = root.history.filter(function(h) { return historyLabel(h) !== app; });
     }
 
     function markAllSeen() {
@@ -256,7 +367,7 @@ Singleton {
     function pushHistory(n) {
         if (!n) return;
         root.history = [{
-            app: (n.appName && n.appName.length) ? n.appName : "System",
+            app: appLabel(n),
             summary: n.summary,
             body: n.body,
             appIcon: n.appIcon,
@@ -377,6 +488,11 @@ Singleton {
     onHistoryChanged: if (root.historyLoaded)
         historyStore.setText(JSON.stringify(root.history))
 
+    Connections {
+        target: DesktopEntries
+        function onApplicationsChanged() { root.desktopTick++; }
+    }
+
     Timer {
         interval: 30000
         running: root.count > 0
@@ -402,6 +518,12 @@ Singleton {
         }
 
         onNotification: function(n) {
+            // A media player's own now-playing notice duplicates the pill's
+            // track OSD; swallow it before it enters history or the popup stack.
+            if (root.isTrackAnnounce(n)) {
+                n.dismiss();
+                return;
+            }
             var a = Object.assign({}, root.arrivalMs);
             a[n.id] = Date.now();
             root.arrivalMs = a;

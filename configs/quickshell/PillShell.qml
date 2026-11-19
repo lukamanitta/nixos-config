@@ -52,6 +52,10 @@ ShellRoot {
     function toggleSurface(mon, surface) {
         if (!mon || mon.length === 0)
             mon = Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : "";
+        // Opening a surface ends tray keyboard-nav. If it were left on, the
+        // pill would stay expanded in its hover pose after the surface closes
+        // (Escape cleared only the surface).
+        root.keyboardMon = "";
         if (root.openMon === mon && root.openSurface === surface) {
             root.close();
             return;
@@ -63,6 +67,9 @@ ShellRoot {
     function close() {
         root.openMon = "";
         root.openSurface = "";
+        // Dismissing a surface also ends tray nav; otherwise its expanded
+        // hover pose has nothing left to close it.
+        root.keyboardMon = "";
     }
 
     /**
@@ -86,6 +93,8 @@ ShellRoot {
         function calendar(mon: string): void { root.toggleSurface(mon, "calendar"); }
         function launcher(mon: string): void { root.toggleSurface(mon, "launcher"); }
         function link(mon: string): void { root.toggleSurface(mon, "link"); }
+        function clipboard(mon: string): void { root.toggleSurface(mon, "clipboard"); }
+        function media(mon: string): void { root.toggleSurface(mon, "media"); }
         function network(mon: string): void { root.toggleSurface(mon, "network"); }
         function power(mon: string): void { root.toggleSurface(mon, "power"); }
         function mixer(mon: string): void { root.toggleSurface(mon, "mixer"); }
@@ -173,14 +182,15 @@ ShellRoot {
 
             anchors { top: true; left: true; right: true; bottom: true }
 
-            mask: monFullscreen ? hiddenRegion : (modal ? fullRegion : pillRegion)
+            mask: (monFullscreen && !pill.osdActive) ? hiddenRegion : (modal ? fullRegion : pillRegion)
             Region { id: hiddenRegion }
             Region {
                 id: pillRegion
-                readonly property real baseW: Math.max(pill.width, pill.targetW)
-                x: pill.x + (pill.width - baseW) / 2
+                /** Body width, including the media bud that sticks out right. */
+                readonly property real bodyW: Math.max(pill.width, pill.targetW)
+                x: pill.x + (pill.width - bodyW) / 2
                 y: pill.y
-                width: baseW
+                width: bodyW + pill.mediaBudPad
                 height: Math.max(pill.height, pill.targetH)
             }
             Region {
@@ -214,6 +224,11 @@ ShellRoot {
                         // so it can resolve stale hover state on surface close.
                         pill.pointerX = point.position.x
                         pill.pointerY = point.position.y
+                        // A real move re-arms hover; a stale `hovered` alone
+                        // must not keep the pill open after a surface closes.
+                        pill.hoverArmed = true
+                        if (hovered && pill.pointerInHover)
+                            pill.hoverLatch = true
                     }
                     onHoveredChanged: {
                         pill.hovered = hovered
@@ -228,9 +243,16 @@ ShellRoot {
                         e.accepted = true;
                 }
                 Keys.onEscapePressed: {
+                    // The surface may consume Escape first (e.g. close an inline
+                    // picker). Otherwise one Escape dismisses everything: an open
+                    // surface and, if it was opened through tray nav, the nav pose
+                    // too. Leaving keyboardNav set would strand the pill in its
+                    // hover pose.
+                    if (pill.handleEscape())
+                        return;
                     if (overlay.surfaceOpen)
                         root.close();
-                    else if (pill.keyboardNav)
+                    if (overlay.keyboardNav)
                         root.keyboardMon = "";
                 }
 
@@ -245,7 +267,7 @@ ShellRoot {
                     surface: overlay.surface
                     keyboardNav: overlay.keyboardNav
 
-                    opacity: overlay.monFullscreen ? 0 : pill.swipeFade
+                    opacity: (overlay.monFullscreen && !pill.osdActive) ? 0 : pill.swipeFade
                     Behavior on opacity {
                         NumberAnimation {
                             duration: Motion.morph
@@ -259,7 +281,7 @@ ShellRoot {
                             y: pill.swipeY
                         },
                         Translate {
-                            y: overlay.monFullscreen ? -(pill.height + overlay.mVert) : 0
+                            y: (overlay.monFullscreen && !pill.osdActive) ? -(pill.height + overlay.mVert) : 0
                             Behavior on y {
                                 NumberAnimation {
                                     duration: Motion.morph

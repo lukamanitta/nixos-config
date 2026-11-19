@@ -391,3 +391,35 @@ window clutter tiling exists to avoid).
 Waybar 0.15 has no app grouping and no pinned non-running apps, so a real Dock
 (pinned
 favourites) would need a custom component, not another waybar module.
+
+---
+
+## LiquoRice
+
+### D34 — LiquoRice runs the QML out-of-store, with helper scripts at fixed paths (settled)
+The Quickshell config is symlinked whole: `~/.config/quickshell` →
+`configs/quickshell` (`mkOutOfStoreSymlink`, D25), so the pill, the lock daemon,
+and the shaders stay editable on the live machine. `Ricelin/` stays a gitlink
+(upstream provenance only) and is deliberately **not** synced — nothing in the
+live QML imports it.
+
+The QML hard-codes three helper paths:
+
+- `~/.config/hypr/scripts/open-pill-surface.sh` — resolves the focused
+  monitor and calls `quickshell ipc call pill <surface> <mon>`.
+- `~/.config/hypr/scripts/lock.sh` — starts/wakes the lock daemon, pokes
+  `$XDG_RUNTIME_DIR/lock-trigger`, then calls `ipc call lock lock`.
+- `~/.config/hypr/scripts/cliphist-thumbs.sh` (+ `magick-policy/`) — decodes
+  clipboard images behind an ImageMagick policy cage.
+
+Rather than patching the QML, `configs/hypr/scripts` is symlinked to
+`~/.config/hypr/scripts` and the copies are adapted for NixOS (`qs` →
+`quickshell`). All other external commands (`hyprctl`, `cliphist`, `ddcutil`,
+`nmcli`, `brightnessctl`, `notify-send`, `slurp`, …) resolve from
+`home.packages` on the session `PATH`, matching the dotfiles' assumptions.
+
+Ownership: the pill is the notification server (`Quickshell.Services.
+Notifications`) and the OSD, so `services.notification` and `services.osd` stay
+`null`; `hypridle` and `hyprpaper` remain the idle/wallpaper providers with
+LiquoRice-specific configs. LitheDE's toolkit theming (GTK/Qt/icons) is
+per-DE and does not apply yet — LiquoRice starts unthemed at the toolkit layer.

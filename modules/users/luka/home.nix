@@ -14,6 +14,7 @@
     ../features/opencode.nix
     ../features/hyprland
     ../desktops/lithe
+    ../desktops/liquorice
     ../features/ghostty.nix
     ../features/tmux.nix
     ../features/zen-browser.nix

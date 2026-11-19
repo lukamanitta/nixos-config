@@ -85,16 +85,12 @@ ThePillSurface {
     function handleKey(e, pressed) {
         if (!pressed)
             return false;
-        const k = e.key;
-        if (k === Qt.Key_Up || k === Qt.Key_K) {
-            root.moveNav(-1);
+        const v = KeyNav.vertical(e);
+        if (v !== 0) {
+            root.moveNav(v);
             return true;
         }
-        if (k === Qt.Key_Down || k === Qt.Key_J) {
-            root.moveNav(1);
-            return true;
-        }
-        if (k === Qt.Key_Return || k === Qt.Key_Enter) {
+        if (KeyNav.isActivate(e)) {
             if (!e.isAutoRepeat)
                 root.activateNav();
             return true;
@@ -265,7 +261,7 @@ ThePillSurface {
         readonly property var n: entry.n
         readonly property bool expanded: root.expandedRows[nrow.n.id] === true
         readonly property var acts: (nrow.n.actions || []).filter(function(a) { return a.text.length > 0; })
-        readonly property string app: (nrow.n.appName && nrow.n.appName.length) ? nrow.n.appName : "System"
+        readonly property string app: Notifs.appLabel(nrow.n)
         readonly property bool muted: Notifs.isMuted(nrow.app)
         readonly property string navKey: "e" + nrow.n.id
         readonly property bool keyFocused: root.navRows.length > 0 && root.navIndex >= 0 && root.navIndex < root.navRows.length && root.navRows[root.navIndex].key === nrow.navKey

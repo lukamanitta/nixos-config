@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
 import Quickshell
+import Quickshell.Widgets
 import "_Shared/Components"
 import "_Shared/Singletons"
 
@@ -25,11 +26,14 @@ Item {
     readonly property bool calendarOpen: surface === "calendar"
     readonly property bool launcherOpen: surface === "launcher"
     readonly property bool linkOpen: surface === "link"
+    readonly property bool clipboardOpen: surface === "clipboard"
+    readonly property bool mediaOpen: surface === "media"
     readonly property bool networkOpen: surface === "network"
     readonly property bool powerOpen: surface === "power"
     readonly property bool mixerOpen: surface === "mixer"
 
     readonly property bool toastActive: Notifs.popups.length > 0 && Notifs.popupMode === "pill"
+    readonly property bool osdActive: osd.flashing
 
     property real swipeX: 0
     property real swipeY: 0
@@ -45,7 +49,15 @@ Item {
 
     readonly property bool surfaceOpen: surface.length > 0
     property bool hoverLatch: false
-    readonly property bool expanded: surfaceOpen || hoverLatch || held || keyboardNav
+    /**
+     * The HoverHandler's state is stale right after a surface closes. Ignore
+     * its changes until the pointer actually moves; otherwise a stale `true`
+     * re-latches the pill in hover forever.
+     */
+    property bool hoverArmed: true
+    /** The tray menu is a separate window; keep the pill open under it. */
+    property bool trayMenuOpen: false
+    readonly property bool expanded: surfaceOpen || hoverLatch || held || keyboardNav || trayMenuOpen
 
     /**
      * Whether the last known pointer position sits inside the pill's hover
@@ -126,19 +138,27 @@ Item {
         return false;
     }
 
+    /**
+     * Give the open surface first refusal on Escape (inline pickers close before
+     * the whole surface). Returns true when the key was consumed.
+     */
+    function handleEscape() {
+        return !!(pill.ameSurface && pill.ameSurface.handleEscape && pill.ameSurface.handleEscape());
+    }
+
     function handleNavKey(e, pressed) {
         if (!pressed)
             return false;
-        const k = e.key;
-        if (k === Qt.Key_Left || k === Qt.Key_H || k === Qt.Key_Up || k === Qt.Key_K) {
+        const d = KeyNav.direction(e);
+        if (d === KeyNav.left || d === KeyNav.up) {
             pill.navMove(-1);
             return true;
         }
-        if (k === Qt.Key_Right || k === Qt.Key_L || k === Qt.Key_Down || k === Qt.Key_J) {
+        if (d === KeyNav.right || d === KeyNav.down) {
             pill.navMove(1);
             return true;
         }
-        if (k === Qt.Key_Return || k === Qt.Key_Enter) {
+        if (KeyNav.isActivate(e)) {
             if (!e.isAutoRepeat)
                 pill.navActivateKey(pill.navKeys[pill.navIndex]);
             return true;
@@ -170,6 +190,9 @@ Item {
     readonly property real hoverPad: 20 * s
     readonly property real hoverW: hoverRow.implicitWidth + (hoverPad * 2)
     readonly property real hoverH: 58 * s
+    /** The album-art bud only exists in hover mode, but its mask pad matters. */
+    readonly property bool mediaBudVisible: mode === "hover" && Players.list.length > 0
+    readonly property real mediaBudPad: mediaBudVisible ? 16 * s : 0
 
     readonly property real calendarW: 318 * s
     readonly property real calendarH: calendar.implicitHeight + 32 * s
@@ -177,6 +200,10 @@ Item {
     readonly property real launcherH: 332 * s
     readonly property real linkW: link.desiredW
     readonly property real linkH: link.implicitHeight + 26 * s
+    readonly property real clipboardW: 360 * s
+    readonly property real clipboardH: clipboard.implicitHeight + 29 * s
+    readonly property real mediaW: (Players.pickable.length > 1 ? 470 : 430) * s
+    readonly property real mediaH: 150 * s
     readonly property real networkW: 330 * s
     readonly property real networkH: network.implicitHeight + 26 * s
     readonly property real toastW: 342 * s
@@ -195,12 +222,18 @@ Item {
             return "launcher";
         if (linkOpen)
             return "link";
+        if (clipboardOpen)
+            return "clipboard";
+        if (mediaOpen)
+            return "media";
         if (networkOpen)
             return "network";
         if (powerOpen)
             return "power";
         if (mixerOpen)
             return "mixer";
+        if (osdActive && !held)
+            return "osd";
         if (toastActive && !held)
             return "toast";
         return expanded ? "hover" : "rest";
@@ -212,8 +245,10 @@ Item {
     onSurfaceOpenChanged: {
         if (surfaceOpen) {
             pinned = false;
+            hoverArmed = true;
             closeRest.stop();
         } else {
+            hoverArmed = false;
             // Show the expanded hover state first, then ease back to rest.
             // Escape / mask changes leave the HoverHandler stale until the
             // pointer moves, so use the last known pointer position to decide
@@ -246,7 +281,11 @@ Item {
         id: closeRest
         interval: Motion.morph + Motion.glide
         onTriggered: {
-            if (pill.hovered || pill.pointerInHover) {
+            // The HoverHandler's `hovered` is stale right after a surface or
+            // tray menu closes (the mask shrinks under a stationary pointer).
+            // Trust the last pointer position instead: if it is not on the
+            // pill, collapse even if `hovered` still reads true.
+            if (pill.pointerInHover) {
                 pill.hoverLatch = true;
                 return;
             }
@@ -260,9 +299,12 @@ Item {
             calendar: () => Qt.size(calendarW, calendarH),
             launcher: () => Qt.size(launcherW, launcherH),
             link: () => Qt.size(linkW, linkH),
+            clipboard: () => Qt.size(clipboardW, clipboardH),
+            media: () => Qt.size(mediaW, mediaH),
             network: () => Qt.size(networkW, networkH),
             power: () => Qt.size(powerW, powerH),
             mixer: () => Qt.size(mixerW, mixerH),
+            osd: () => Qt.size(osd.desiredW, osd.desiredH),
             toast: () => Qt.size(toastW, (toastLoader.item ? toastLoader.item.implicitHeight : 0) + 24 * s),
             hover: () => Qt.size(hoverW, hoverH)
         })
@@ -424,6 +466,10 @@ Item {
             return launcher;
         if (linkOpen)
             return link;
+        if (clipboardOpen)
+            return clipboard;
+        if (mediaOpen)
+            return media;
         if (networkOpen)
             return network;
         if (powerOpen)
@@ -434,6 +480,10 @@ Item {
     }
 
     onHoveredChanged: {
+        // A stale `true` right after close must not re-latch, but a genuine
+        // leave must still start the grace collapse.
+        if (!hoverArmed && hovered)
+            return;
         if (hovered) {
             hoverLatch = true;
             graceTimer.stop();
@@ -466,7 +516,7 @@ Item {
     Item {
         id: rest
         anchors.fill: parent
-        opacity: (pill.expanded || pill.mode === "toast") ? 0 : Math.pow(pill.morphCloseness, 1.5)
+        opacity: (pill.expanded || pill.mode === "toast" || pill.mode === "osd") ? 0 : Math.pow(pill.morphCloseness, 1.5)
         visible: opacity > 0.01
         Behavior on opacity {
             NumberAnimation {
@@ -489,7 +539,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 17 * pill.s
                     height: 17 * pill.s
-                    isAudioPlaying: MprisState.isPlaying
+                    isAudioPlaying: Players.playing
                 }
 
                 // Text {
@@ -573,7 +623,7 @@ Item {
             //         anchors.verticalCenter: parent.verticalCenter
             //         width: 17 * pill.s
             //         height: 17 * pill.s
-            //         isAudioPlaying: MprisState.isPlaying
+            //         isAudioPlaying: Players.playing
             //     }
 
             // Text {
@@ -654,10 +704,12 @@ Item {
                 }
 
                 Tray {
+                    id: trayItems
                     anchors.verticalCenter: parent.verticalCenter
                     s: pill.s
                     barWindow: pill.barWindow
                     enabled: hover.live
+                    onMenuOpenChanged: pill.trayMenuOpen = menuOpen
                 }
 
                 Item {
@@ -807,6 +859,106 @@ Item {
                 }
             }
         }
+
+        /**
+         * Media bud: the active player's art in a circle that half-sticks out of
+         * the pill's right edge. Clicking it opens the media surface; it is a
+         * shortcut, not a mini-player, and only exists while the pill is hovered.
+         */
+        Rectangle {
+            id: mediaBud
+
+            readonly property bool shown: pill.mediaBudVisible
+            property real budR: (budArea.containsMouse ? 15 : 12) * pill.s
+            readonly property real progress: Players.lengthKnown
+                ? Math.max(0, Math.min(1, Players.positionSec / Players.lengthSec))
+                : 0
+            property real shownProgress: progress
+            Behavior on shownProgress {
+                NumberAnimation { duration: Motion.fast; easing.type: Easing.Linear }
+            }
+
+            width: budR * 2
+            height: budR * 2
+            radius: budR
+            x: pill.width - budR
+            y: (pill.height - height) / 2
+            visible: opacity > 0.01
+            opacity: shown ? 1 : 0
+            border.width: 1
+            border.color: Theme.colour.border
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Theme.colour.surfaceLight }
+                GradientStop { position: 1.0; color: Theme.colour.surfaceDefault }
+            }
+            Behavior on budR { NumberAnimation { duration: Motion.fast; easing.type: Motion.easeStandard } }
+            Behavior on opacity { NumberAnimation { duration: Motion.standard } }
+
+            ClippingRectangle {
+                anchors.fill: parent
+                anchors.margins: 2 * pill.s
+                radius: width / 2
+                color: Theme.colour.surfaceOverlay
+
+                Image {
+                    id: budArt
+                    anchors.fill: parent
+                    source: Players.artUrl
+                    sourceSize: Qt.size(Math.ceil(width * 2), Math.ceil(height * 2))
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    visible: status === Image.Ready
+                }
+
+                GlyphIcon {
+                    anchors.centerIn: parent
+                    width: 12 * pill.s
+                    height: 12 * pill.s
+                    name: "music"
+                    color: Theme.colour.foregroundSubtle
+                    visible: budArt.status !== Image.Ready
+                }
+            }
+
+            /** Thin play-progress arc on the bud's perimeter. */
+            Shape {
+                anchors.fill: parent
+                visible: mediaBud.progress > 0
+
+                ShapePath {
+                    strokeColor: Theme.colour.accent
+                    strokeWidth: 1.6 * pill.s
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+
+                    PathAngleArc {
+                        centerX: mediaBud.width / 2
+                        centerY: mediaBud.height / 2
+                        radiusX: mediaBud.width / 2 - 1 * pill.s
+                        radiusY: mediaBud.height / 2 - 1 * pill.s
+                        startAngle: -90
+                        sweepAngle: mediaBud.shownProgress * 360
+                    }
+                }
+            }
+
+            Timer {
+                interval: 500
+                running: mediaBud.shown && Players.playing
+                repeat: true
+                onTriggered: if (Players.active) Players.active.positionChanged()
+            }
+
+            MouseArea {
+                id: budArea
+                anchors.fill: parent
+                anchors.margins: -2 * pill.s
+                enabled: mediaBud.shown
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: pill.requestSurface("media")
+            }
+        }
     }
     ThePillLauncher {
         id: launcher
@@ -821,6 +973,27 @@ Item {
         id: link
         s: pill.s
         open: pill.linkOpen
+        morphCloseness: pill.morphCloseness
+        ameArrived: ame.arrived
+        ameArriving: ame.arriving
+        ameAtTarget: ame.atTarget
+        ameTick: ame.arrivalTick
+        onRequestClose: pill.requestClose()
+    }
+
+    ThePillClipboard {
+        id: clipboard
+        s: pill.s
+        open: pill.clipboardOpen
+        morphCloseness: pill.morphCloseness
+        ameArrived: ame.arrived
+        onRequestClose: pill.requestClose()
+    }
+
+    ThePillMedia {
+        id: media
+        s: pill.s
+        open: pill.mediaOpen
         morphCloseness: pill.morphCloseness
         ameArrived: ame.arrived
         ameArriving: ame.arriving
@@ -909,6 +1082,25 @@ Item {
         onRequestClose: pill.requestClose()
     }
 
+    ThePillOsd {
+        id: osd
+        anchors.fill: parent
+        anchors.topMargin: 12 * pill.s
+        anchors.leftMargin: 18 * pill.s
+        anchors.rightMargin: 18 * pill.s
+        anchors.bottomMargin: 12 * pill.s
+        s: pill.s
+        screenName: pill.screenName
+        suppressed: pill.surfaceOpen || pill.held || pill.keyboardNav
+        expanded: pill.expanded
+        enabled: pill.mode === "osd"
+        opacity: pill.mode === "osd" ? 1 : 0
+        visible: opacity > 0.01
+        Behavior on opacity {
+            NumberAnimation { duration: Motion.standard; easing.type: Motion.easeStandard }
+        }
+    }
+
     /**
      * Ame is declared last so the glowing bead draws over the surfaces; the
      * inbox row hover fills are opaque and were covering its seam when it sat
@@ -918,7 +1110,7 @@ Item {
         id: ame
         anchors.fill: parent
         s: pill.s
-        heat: pill.powerOpen ? power.holdProgress : 0
+        heat: pill.ameSurface ? pill.ameSurface.holdHeat : 0
         wake: pill.wakePoint
         wickDir: pill.powerOpen ? 1 : -1
         form: pill.ameSurface ? pill.ameSurface.ameForm : (pill.mode === "hover" && pill.hoverSoulGate ? "soul" : "off")

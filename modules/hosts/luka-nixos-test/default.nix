@@ -23,10 +23,11 @@
     users.luka = {
       imports = [ ../../users/luka/home.nix ];
 
-      # hyprlauncher segfaults in QEMU (aquamarine picks a DRM node with no
-      # render node); use fuzzel (wl_shm-based) on the test VM only.
+      # LiquoRice is the track we are bringing up; flip back to "lithe" to
+      # compare. hyprlauncher's QEMU crash no longer applies, so the host-level
+      # launcher override is gone; fuzzel stays installed as a fallback.
+      my.desktops.environment = "liquorice";
       home.packages = [ pkgs.fuzzel ];
-      my.desktop.programs.launcher = "fuzzel";
 
       my.hyprland = {
         monitors = [

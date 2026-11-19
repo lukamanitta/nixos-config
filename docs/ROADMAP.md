@@ -137,9 +137,10 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
       the green traffic light (D33).
 - [ ] LitheDE follow-ups: swaync `style.css` theming, hyprlauncher config,
       Qt `qt6ct` colourme seam, real traffic-light glyphs, network picker UX.
-- [ ] LiquoRice: `programs.quickshell.configs` (`Pill`, `lockdaemon`) from
-      `configs/quickshell/`, scripts as `writeShellApplication`, sets
-      `statusBar`. See DECISIONS D19/D20.
+- [x] LiquoRice bootstrap: QML symlinked from `configs/quickshell`, helper
+      scripts from `configs/hypr/scripts`, roles set, VM switched to it (D34).
+- [ ] LiquoRice polish: toolkit theming (GTK/Qt/icons), wallpaper, lock-as-
+      greeter, pill surface keybinds beyond launcher/clipboard/media.
 - [ ] Autologin + Quickshell lock-as-greeter — deferred (DECISIONS D23/D24).
 - [ ] Hyprland stable for one week on the VM.
 
