@@ -183,11 +183,10 @@ One fused strip that does the menu-bar and Dock jobs at once (D33):
   unlit otherwise, click to switch. Fixed slots mean the row never shifts.
 - **Right:** tray (`nm-applet`) · clock · control-center button · power button.
 - Frosted glass: CSS `rgba` surfaces over Hyprland layer blur.
-- The focused dock entry gets a straight 2px underline with rounded caps; when
-  the focused window is maximized the other entries fade (runtime
-  `~/.config/waybar/lithede-state.css`, written by a small Hyprland-event
-  watcher — see D33). The watcher logs its state reads to
-  `~/.local/state/lithede/bar-state.log` for debugging.
+- The focused dock entry gets a straight 2px underline with rounded caps.
+  Fading the other entries while a window is maximized was tried and removed —
+  it needed live-compositor state in a runtime CSS file and never paid for the
+  plumbing; revisit only if the bar proves unreadable in practice.
 - Waybar 0.15 cannot group windows by app or show pinned non-running apps, so
   the dock is honestly a window list, and pinning would need a custom component.
 

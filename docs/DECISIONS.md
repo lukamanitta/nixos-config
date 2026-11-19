@@ -372,13 +372,15 @@ Settled behaviour:
 - The primary mouse affordance for maximize is the green traffic light, which
   toggles `FSMODE_MAXIMIZED` (fills the workspace but keeps gaps and the bar)
   rather than true fullscreen — macOS green semantics.
-- Workspaces are status only: five fixed 4px slots for workspaces 1–5, lit
-  only while occupied, never numbers. Fixed slots avoid the row shifting when
-  a new workspace is created. Clicking a slot switches to it.
+- Workspaces are status only: small, tightly packed dots for workspaces 1–5,
+  lit only while occupied, never numbers. Fixed slots avoid the row shifting
+  when a new workspace is created. Clicking a slot switches to it.
 - The focused dock entry gets a straight underline with rounded caps rather
-  than an accent-tinted background. When the focused window is maximized the
-  other entries fade, so "where did the other windows go?" is answered by the
-  bar itself.
+  than an accent-tinted background.
+- Fading the other dock entries while the focused window is maximized was
+  tried and **dropped**: GTK CSS cannot express it (no `:has()`), so it needed
+  a Hyprland-event watcher rewriting a runtime stylesheet, and the plumbing
+  cost outweighed the benefit. Deferred, not rejected on design grounds.
 
 Rejected: workspaces only (a stranger cannot switch windows with the mouse);
 taskbar only (drops the space indicator keyboard users rely on); a scripted
@@ -386,9 +388,6 @@ global float mode (Hyprland has no float-all; a Lua loop over `hl.get_windows`
 plus map-time rules leaks on every new window and produces exactly the manual
 window clutter tiling exists to avoid).
 
-The fade rule depends on live compositor state, which GTK CSS cannot express
-(no `:has()`), so a small watcher follows Hyprland's event socket and rewrites
-`~/.config/waybar/lithede-state.css` on focus/fullscreen events — the same
-"Nix owns structure, runtime owns the conditional bytes" seam as D27. Waybar
-0.15 has no app grouping and no pinned non-running apps, so a real Dock (pinned
+Waybar 0.15 has no app grouping and no pinned non-running apps, so a real Dock
+(pinned
 favourites) would need a custom component, not another waybar module.
