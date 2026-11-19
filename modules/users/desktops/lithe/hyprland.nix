@@ -8,7 +8,14 @@
 let
   t = config.my.desktops.lithe.tokens;
   lua = lib.generators.mkLuaInline;
-  activeBorder = lua ''require("theme.colourme").activeBorderColor'';
+  activeBorder = lua ''
+    (function()
+      -- The runtime theme is colourme-owned, so it can be absent (e.g. mid
+      -- activation). Never let that fail the whole compositor config.
+      local ok, theme = pcall(require, "theme.colourme")
+      return (ok and theme.activeBorderColor) or "rgb(555555)"
+    end)()
+  '';
   enabled = config.my.desktops.environment == "lithe";
 in
 {

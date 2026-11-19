@@ -199,6 +199,20 @@ in
       end)
     '';
 
+    # A switch replaces waybar's CSS on disk but nothing told the running bar;
+    # reload it after the colourme files are seeded.
+    home.activation.reloadWaybar =
+      lib.hm.dag.entryAfter
+        [
+          "writeBoundary"
+          "seedColourmeTheme"
+        ]
+        ''
+          if [ -e "$HOME/.config/waybar/colourme-waybar.css" ]; then
+            pkill -SIGUSR2 -x waybar || true
+          fi
+        '';
+
     xdg.configFile = {
       "waybar/config".source = (pkgs.formats.json { }).generate "waybar-config.json" barConfig;
 

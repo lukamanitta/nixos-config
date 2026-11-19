@@ -50,14 +50,28 @@
     # frequently absent from the activation PATH — the reload loop then finds
     # no instances and the config silently stays stale until re-login. Do it
     # ourselves with absolute paths so a switch always applies.
-    home.activation.reloadHyprlandConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      hyprctl=${pkgs.hyprland}/bin/hyprctl
-      jq=${pkgs.jq}/bin/jq
-      if [ -d "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr" ] || [ -d /tmp/hypr ]; then
-        for instance in $("$hyprctl" instances -j 2>/dev/null | "$jq" -r '.[].instance' 2>/dev/null); do
-          "$hyprctl" -i "$instance" reload config-only || true
-        done
-      fi
-    '';
+    #
+    # Order after `seedColourmeTheme`: reloading while the runtime theme file
+    # is absent fails the whole config (`module 'theme.colourme' not found`).
+    # The existence guard keeps a bad ordering from ever applying a broken
+    # config again.
+    home.activation.reloadHyprlandConfig =
+      lib.hm.dag.entryAfter
+        [
+          "writeBoundary"
+          "seedColourmeTheme"
+        ]
+        ''
+          hyprctl=${pkgs.hyprland}/bin/hyprctl
+          jq=${pkgs.jq}/bin/jq
+          theme="$HOME/.config/hypr/theme/colourme.lua"
+          if [ ! -e "$theme" ]; then
+            echo "reloadHyprlandConfig: $theme is missing; skipping reload" >&2
+          elif [ -d "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr" ] || [ -d /tmp/hypr ]; then
+            for instance in $("$hyprctl" instances -j 2>/dev/null | "$jq" -r '.[].instance' 2>/dev/null); do
+              "$hyprctl" -i "$instance" reload config-only || true
+            done
+          fi
+        '';
   };
 }

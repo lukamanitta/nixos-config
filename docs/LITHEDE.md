@@ -123,6 +123,12 @@ GTK colour overrides are the supported way to recolour **libadwaita** apps
 (named `@define-color`s). Caveat: the libadwaita colour *names* churn across
 versions — verify against the pinned GTK/libadwaita.
 
+A missing runtime theme must degrade, never break: the generated Hyprland
+config reads `theme.colourme` behind `pcall` with neutral fallbacks, and the
+activation steps that reload Hyprland/waybar are ordered *after*
+`seedColourmeTheme`. Reloading before the seed exists fails the whole compositor
+config (`module 'theme.colourme' not found`) and leaves the session half-styled.
+
 ## Design tokens (LitheDE v1)
 
 Living in one Nix module under `modules/users/desktops/lithe/`, consumed by

@@ -50,7 +50,9 @@ in
         -- for contrast. Fall back to the stock macOS colours when the runtime
         -- theme predates a key (the activation seed does not overwrite an
         -- existing colourme.lua), so a stale theme cannot break the config.
-        local colours = require("theme.colourme")
+        -- A missing/unreadable runtime theme must not break the config.
+        local ok, colours = pcall(require, "theme.colourme")
+        if not ok then colours = {} end
         local red = colours.failure or "rgb(ff5f57)"
         local yellow = colours.warning or "rgb(febc2e)"
         local green = colours.success or "rgb(28c840)"
