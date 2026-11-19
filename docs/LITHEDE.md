@@ -180,7 +180,8 @@ One fused strip that does the menu-bar and Dock jobs at once (D33):
 - The focused dock entry gets a straight 2px underline with rounded caps; when
   the focused window is maximized the other entries fade (runtime
   `~/.config/waybar/lithede-state.css`, written by a small Hyprland-event
-  watcher — see D33).
+  watcher — see D33). The watcher logs its state reads to
+  `~/.local/state/lithede/bar-state.log` for debugging.
 - Waybar 0.15 cannot group windows by app or show pinned non-running apps, so
   the dock is honestly a window list, and pinning would need a custom component.
 

@@ -54,7 +54,10 @@ let
           }
           {
             label = "Logout";
-            command = "hyprctl dispatch exit";
+            # Lua config type: `hyprctl dispatch` is shorthand for
+            # `hl.dispatch(...)`, so the legacy `exit` name is invalid Lua and
+            # silently does nothing (same trap as the hyprbars buttons).
+            command = "${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.exit()'";
           }
           {
             label = "Suspend";

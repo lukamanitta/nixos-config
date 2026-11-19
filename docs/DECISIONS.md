@@ -151,6 +151,10 @@ theme files are refreshed on rebuild, but a colourme-owned theme written before
 a template key was added keeps its own content; it must not break the config.
 Run `colourme <scheme>` to regenerate that file with `warning`.
 
+The same trap applies to anything that shells out to a dispatcher, including
+`swaync`'s power menu: "logout" is `hyprctl dispatch 'hl.dsp.exit()'`, not
+`hyprctl dispatch exit`.
+
 ---
 
 ## Session / display manager

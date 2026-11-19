@@ -41,15 +41,22 @@ let
       jq
       socat
       procps
-      util-linux
     ];
     text = ''
       out="${config.xdg.configHome}/waybar/lithede-state.css"
       mkdir -p "$(dirname "$out")"
 
-      # Single instance: a config reload also (re)starts us.
-      exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/lithede-bar-state.lock"
-      flock -n 9 || exit 0
+      # A config reload also (re)starts us; take over from any previous
+      # generation instead of silently losing to it.
+      pidfile="''${XDG_RUNTIME_DIR:-/tmp}/lithede-bar-state.pid"
+      if [ -f "$pidfile" ]; then
+        old="$(cat "$pidfile" 2>/dev/null || true)"
+        if [ -n "$old" ] && [ "$old" != "$$" ] && kill -0 "$old" 2>/dev/null; then
+          kill "$old" 2>/dev/null || true
+        fi
+      fi
+      echo "$$" > "$pidfile"
+      trap 'rm -f "$pidfile"' EXIT
 
       if [ -n "''${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
         sock="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
@@ -60,8 +67,19 @@ let
           sock="$candidate"
           break
         done
+        # hyprctl needs the instance signature too; derive it from the socket so
+        # the state query works even when started without the env var.
+        if [ -n "$sock" ]; then
+          discovered_sig="$(basename "$(dirname "$sock")")"
+          export HYPRLAND_INSTANCE_SIGNATURE="$discovered_sig"
+        fi
       fi
       [ -n "$sock" ] || { echo "lithede-bar-state: no Hyprland event socket" >&2; exit 1; }
+
+      log="''${XDG_STATE_HOME:-$HOME/.local/state}/lithede/bar-state.log"
+      mkdir -p "$(dirname "$log")"
+      : > "$log"
+      echo "start sig=''${HYPRLAND_INSTANCE_SIGNATURE:-} sock=$sock" >> "$log"
 
       last="__init__"
 
@@ -70,6 +88,7 @@ let
         # `fullscreen` is Hyprland's internal state; waybar's foreign-toplevel
         # maximize request only sets the client state. Check both.
         fs="$(hyprctl activewindow -j 2>/dev/null | jq -r 'if ((.fullscreen // 0) != 0) or ((.fullscreenClient // 0) != 0) then 1 else 0 end' 2>/dev/null || echo 0)"
+        echo "state fs=''${fs:-?}" >> "$log"
         if [ "''${fs:-0}" = "1" ]; then
           # GTK CSS has no `:not()`/`:has()`; fade everything, then restore the
           # focused entry (the generated file is imported before the base CSS,
@@ -130,8 +149,11 @@ let
     };
     "hyprland/workspaces" = {
       # Five fixed slots so a new workspace never shifts the row; empty ones
-      # are just unlit dots (D33).
-      format = "";
+      # are just dim dots (D33).
+      format = "{icon}";
+      "format-icons" = {
+        default = "●";
+      };
       "persistent-workspaces" = {
         "*" = [
           1
@@ -169,8 +191,8 @@ in
     my.hyprland.autostart = lib.mkAfter [ (lib.getExe barState) ];
 
     # `hyprland.start` only fires at login; also (re)start on config reload so
-    # a home-manager switch alone picks up changes. The script's flock guard
-    # makes a duplicate spawn a no-op.
+    # a home-manager switch alone picks up changes. The script takes over from
+    # any instance started by an older generation.
     wayland.windowManager.hyprland.extraConfig = ''
       hl.on("config.reloaded", function()
         hl.exec_cmd(${toLua (lib.getExe barState)})
@@ -201,25 +223,20 @@ in
         /* Workspace dots — fixed 4px slots, status not numbers. Occupied slots
            are lit; empty and not-yet-created ones stay dim; active is accent. */
         #workspaces button {
-          color: transparent;
-          background: alpha(@colourme_fg, 0.35);
-          min-width: 4px;
-          min-height: 4px;
-          padding: 0;
-          margin: 0 ${toString t.space.xs}px;
-          border-radius: 50%;
+          color: alpha(@colourme_fg, 0.35);
+          background: transparent;
+          padding: 0 ${toString t.space.xs}px;
+          min-width: 0;
+          min-height: 0;
+          font-size: 4px;
         }
 
         #workspaces button.empty {
-          background: alpha(@colourme_fg, 0.12);
+          color: alpha(@colourme_fg, 0.12);
         }
 
         #workspaces button.active {
-          background: @colourme_accent;
-        }
-
-        #workspaces button:hover {
-          background: alpha(@colourme_fg, 0.5);
+          color: @colourme_accent;
         }
 
         #custom-launcher {
