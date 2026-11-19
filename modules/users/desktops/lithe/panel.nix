@@ -198,15 +198,20 @@ in
           color: @colourme_fg;
         }
 
-        /* Workspace dots — fixed 4px slots, status not numbers. */
+        /* Workspace dots — fixed 4px slots, status not numbers. Occupied slots
+           are lit; empty and not-yet-created ones stay dim; active is accent. */
         #workspaces button {
           color: transparent;
-          background: alpha(@colourme_fg, 0.25);
+          background: alpha(@colourme_fg, 0.35);
           min-width: 4px;
           min-height: 4px;
           padding: 0;
           margin: 0 ${toString t.space.xs}px;
           border-radius: 50%;
+        }
+
+        #workspaces button.empty {
+          background: alpha(@colourme_fg, 0.12);
         }
 
         #workspaces button.active {
