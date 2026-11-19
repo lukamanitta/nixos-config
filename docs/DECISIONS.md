@@ -368,11 +368,13 @@ Settled behaviour:
 - The primary mouse affordance for maximize is the green traffic light, which
   toggles `FSMODE_MAXIMIZED` (fills the workspace but keeps gaps and the bar)
   rather than true fullscreen — macOS green semantics.
-- Workspaces are status only: small dots for occupied workspaces (Hyprland
-  destroys empty, unfocused workspaces), never numbers. Clicking a dot switches.
-- The focused dock entry is underlined rather than accent-tinted. When the
-  focused window is maximized the other entries fade, so "where did the other
-  windows go?" is answered by the bar itself.
+- Workspaces are status only: five fixed 4px slots for workspaces 1–5, lit
+  only while occupied, never numbers. Fixed slots avoid the row shifting when
+  a new workspace is created. Clicking a slot switches to it.
+- The focused dock entry gets a straight underline with rounded caps rather
+  than an accent-tinted background. When the focused window is maximized the
+  other entries fade, so "where did the other windows go?" is answered by the
+  bar itself.
 
 Rejected: workspaces only (a stranger cannot switch windows with the mouse);
 taskbar only (drops the space indicator keyboard users rely on); a scripted

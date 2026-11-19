@@ -23,6 +23,7 @@
 let
   enabled = config.my.desktops.environment == "lithe";
   t = config.my.desktops.lithe.tokens;
+  toLua = lib.generators.toLua { };
   launcher =
     if config.my.desktop.programs.launcher != null then
       config.my.desktop.programs.launcher
@@ -40,10 +41,15 @@ let
       jq
       socat
       procps
+      util-linux
     ];
     text = ''
       out="${config.xdg.configHome}/waybar/lithede-state.css"
       mkdir -p "$(dirname "$out")"
+
+      # Single instance: a config reload also (re)starts us.
+      exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/lithede-bar-state.lock"
+      flock -n 9 || exit 0
 
       if [ -n "''${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
         sock="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
@@ -61,8 +67,10 @@ let
 
       write_state() {
         local fs new
-        fs="$(hyprctl activewindow -j 2>/dev/null | jq -r '.fullscreen // 0' 2>/dev/null || echo 0)"
-        if [ "''${fs:-0}" != "0" ]; then
+        # `fullscreen` is Hyprland's internal state; waybar's foreign-toplevel
+        # maximize request only sets the client state. Check both.
+        fs="$(hyprctl activewindow -j 2>/dev/null | jq -r 'if ((.fullscreen // 0) != 0) or ((.fullscreenClient // 0) != 0) then 1 else 0 end' 2>/dev/null || echo 0)"
+        if [ "''${fs:-0}" = "1" ]; then
           # GTK CSS has no `:not()`/`:has()`; fade everything, then restore the
           # focused entry (the generated file is imported before the base CSS,
           # and no later rule sets opacity).
@@ -121,11 +129,17 @@ let
       "on-click-right" = "maximize";
     };
     "hyprland/workspaces" = {
-      # Dots, not numbers: Hyprland destroys empty unfocused workspaces, so
-      # this is the occupied set only (plus the active one) — no dead slots.
-      format = "{icon}";
-      "format-icons" = {
-        default = "●";
+      # Five fixed slots so a new workspace never shifts the row; empty ones
+      # are just unlit dots (D33).
+      format = "";
+      "persistent-workspaces" = {
+        "*" = [
+          1
+          2
+          3
+          4
+          5
+        ];
       };
       "all-outputs" = false;
       "show-special" = false;
@@ -154,6 +168,15 @@ in
     # Started with Hyprland, so HYPRLAND_INSTANCE_SIGNATURE is already set.
     my.hyprland.autostart = lib.mkAfter [ (lib.getExe barState) ];
 
+    # `hyprland.start` only fires at login; also (re)start on config reload so
+    # a home-manager switch alone picks up changes. The script's flock guard
+    # makes a duplicate spawn a no-op.
+    wayland.windowManager.hyprland.extraConfig = ''
+      hl.on("config.reloaded", function()
+        hl.exec_cmd(${toLua (lib.getExe barState)})
+      end)
+    '';
+
     xdg.configFile = {
       "waybar/config".source = (pkgs.formats.json { }).generate "waybar-config.json" barConfig;
 
@@ -175,17 +198,23 @@ in
           color: @colourme_fg;
         }
 
-        /* Workspace dots — status, not a switcher row. */
+        /* Workspace dots — fixed 4px slots, status not numbers. */
         #workspaces button {
-          color: @colourme_fg_dim;
-          background: transparent;
-          padding: 0 ${toString t.space.xs}px;
+          color: transparent;
+          background: alpha(@colourme_fg, 0.25);
           min-width: 4px;
-          font-size: 6px;
+          min-height: 4px;
+          padding: 0;
+          margin: 0 ${toString t.space.xs}px;
+          border-radius: 50%;
         }
 
         #workspaces button.active {
-          color: @colourme_accent;
+          background: @colourme_accent;
+        }
+
+        #workspaces button:hover {
+          background: alpha(@colourme_fg, 0.5);
         }
 
         #custom-launcher {
@@ -193,19 +222,17 @@ in
           font-weight: bold;
         }
 
-        /* Dock: the focused window is underlined, nothing else is tinted. */
+        /* Dock: the focused window gets a straight 2px underline with rounded
+           caps (bottom-corner radius clips the border ends), nothing tinted. */
         #taskbar button {
           background: transparent;
           padding: 0 ${toString t.space.xs}px;
-          border-radius: ${toString t.radius.inner}px;
+          border-bottom: 2px solid transparent;
+          border-radius: 0 0 2px 2px;
         }
 
         #taskbar button.active {
-          box-shadow: inset 0 -2px @colourme_accent;
-        }
-
-        #taskbar button:hover {
-          background: alpha(@colourme_fg, 0.1);
+          border-bottom-color: @colourme_accent;
         }
 
         #tray,

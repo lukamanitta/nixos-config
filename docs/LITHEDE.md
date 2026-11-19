@@ -173,12 +173,14 @@ One fused strip that does the menu-bar and Dock jobs at once (D33):
 
 - **Left:** magnifier launcher button · dock of running windows (`wlr/taskbar`:
   left click focuses, middle closes, right toggles maximize).
-- **Centre:** workspace dots — occupied workspaces only, click to switch.
+- **Centre:** workspace dots — five fixed 4px slots (1–5), lit when occupied,
+  unlit otherwise, click to switch. Fixed slots mean the row never shifts.
 - **Right:** tray (`nm-applet`) · clock · control-center button · power button.
 - Frosted glass: CSS `rgba` surfaces over Hyprland layer blur.
-- The focused dock entry is underlined; when the focused window is maximized
-  the other entries fade (runtime `~/.config/waybar/lithede-state.css`, written
-  by a small Hyprland-event watcher — see D33).
+- The focused dock entry gets a straight 2px underline with rounded caps; when
+  the focused window is maximized the other entries fade (runtime
+  `~/.config/waybar/lithede-state.css`, written by a small Hyprland-event
+  watcher — see D33).
 - Waybar 0.15 cannot group windows by app or show pinned non-running apps, so
   the dock is honestly a window list, and pinning would need a custom component.
 
