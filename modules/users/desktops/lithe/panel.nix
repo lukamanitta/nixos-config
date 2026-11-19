@@ -5,9 +5,21 @@
   ...
 }:
 
-# LitheDE top bar (waybar): launcher + taskbar on the left, workspaces centred
-# (the dock analogue), tray + clock + control-center on the right. Geometry
-# comes from the LitheDE tokens; colours from the colourme waybar seam.
+# LitheDE top bar (waybar): one fused strip (DECISIONS D33).
+#
+#   left   — launcher (magnifier) + dock of running windows
+#   centre — workspace dots (occupied only, click to switch)
+#   right  — tray + clock + control centre
+#
+# There is no separate taskbar next to a workspace row: the workspace module is
+# reduced to status dots, and the dock is the only clickable window list.
+# Geometry comes from the LitheDE tokens; colours from the colourme waybar seam.
+#
+# The "fade the other apps while the focused window is maximized" rule cannot
+# be expressed in GTK CSS (no `:has()`), so a tiny watcher follows Hyprland's
+# event socket and rewrites `~/.config/waybar/lithede-state.css` — the same
+# runtime-writable seam pattern as colourme (D27): Nix owns the structure, the
+# compositor's live state owns the one conditional rule.
 let
   enabled = config.my.desktops.environment == "lithe";
   t = config.my.desktops.lithe.tokens;
@@ -16,6 +28,65 @@ let
       config.my.desktop.programs.launcher
     else
       "hyprlauncher";
+
+  # Waybar cannot chain actions per mouse button, and `maximize` does not move
+  # focus (Hyprland's foreign-toplevel request only sets the fullscreen mode).
+  # So the dock contracts to: left = focus, middle = close, right = maximize
+  # toggle. The green traffic light is the primary maximize affordance.
+  barState = pkgs.writeShellApplication {
+    name = "lithede-bar-state";
+    runtimeInputs = with pkgs; [
+      hyprland
+      jq
+      socat
+      procps
+    ];
+    text = ''
+      out="${config.xdg.configHome}/waybar/lithede-state.css"
+      mkdir -p "$(dirname "$out")"
+
+      if [ -n "''${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+        sock="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+      else
+        sock=""
+        for candidate in "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/hypr/*/.socket2.sock; do
+          [ -S "$candidate" ] || continue
+          sock="$candidate"
+          break
+        done
+      fi
+      [ -n "$sock" ] || { echo "lithede-bar-state: no Hyprland event socket" >&2; exit 1; }
+
+      last="__init__"
+
+      write_state() {
+        local fs new
+        fs="$(hyprctl activewindow -j 2>/dev/null | jq -r '.fullscreen // 0' 2>/dev/null || echo 0)"
+        if [ "''${fs:-0}" != "0" ]; then
+          # GTK CSS has no `:not()`/`:has()`; fade everything, then restore the
+          # focused entry (the generated file is imported before the base CSS,
+          # and no later rule sets opacity).
+          new="$(printf '%s\n' '#taskbar button { opacity: 0.35; }' '#taskbar button.active { opacity: 1; }')"
+        else
+          new=""
+        fi
+
+        # Only rewrite + reload waybar when the state actually flipped.
+        if [ "$new" != "$last" ]; then
+          printf '%s\n' "$new" > "$out"
+          pkill -SIGUSR2 -x waybar || true
+        fi
+        last="$new"
+      }
+
+      write_state
+      socat -U - "UNIX-CONNECT:$sock" | while IFS= read -r line; do
+        case "$line" in
+          activewindow\>\>* | fullscreenstate\>\>* | fullscreen\>\>*) write_state ;;
+        esac
+      done
+    '';
+  };
 
   barConfig = {
     layer = "top";
@@ -33,7 +104,8 @@ let
       "custom/controlcenter"
     ];
     "custom/launcher" = {
-      format = "Apps";
+      # Magnifier: the button opens hyprlauncher's search, it does not list apps.
+      format = "";
       tooltip = false;
       "on-click" = launcher;
     };
@@ -41,13 +113,24 @@ let
       format = "{icon}";
       "icon-size" = 18;
       "tooltip-format" = "{title}";
+      # Stable order with same-app windows adjacent; `active-first` would
+      # reshuffle the row on every focus change.
+      "sort-by-app-id" = true;
       "on-click" = "activate";
       "on-click-middle" = "close";
-      "on-click-right" = "minimize";
+      "on-click-right" = "maximize";
     };
     "hyprland/workspaces" = {
-      format = "{name}";
-      "on-click" = "activate";
+      # Dots, not numbers: Hyprland destroys empty unfocused workspaces, so
+      # this is the occupied set only (plus the active one) — no dead slots.
+      format = "{icon}";
+      "format-icons" = {
+        default = "●";
+      };
+      "all-outputs" = false;
+      "show-special" = false;
+      tooltip = true;
+      "tooltip-format" = "workspace {name}";
     };
     tray = {
       "icon-size" = 18;
@@ -66,11 +149,17 @@ let
 in
 {
   config = lib.mkIf enabled {
+    home.packages = [ barState ];
+
+    # Started with Hyprland, so HYPRLAND_INSTANCE_SIGNATURE is already set.
+    my.hyprland.autostart = lib.mkAfter [ (lib.getExe barState) ];
+
     xdg.configFile = {
       "waybar/config".source = (pkgs.formats.json { }).generate "waybar-config.json" barConfig;
 
       "waybar/style.css".text = ''
         @import url("colourme-waybar.css");
+        @import url("lithede-state.css");
 
         * {
           font-family: "${t.font.ui}", "${t.font.glyph}";
@@ -86,16 +175,17 @@ in
           color: @colourme_fg;
         }
 
+        /* Workspace dots — status, not a switcher row. */
         #workspaces button {
           color: @colourme_fg_dim;
-          padding: 0 ${toString t.space.sm}px;
           background: transparent;
-          border-radius: ${toString t.radius.inner}px;
+          padding: 0 ${toString t.space.xs}px;
+          min-width: 4px;
+          font-size: 6px;
         }
 
         #workspaces button.active {
-          color: @colourme_bg;
-          background: @colourme_accent;
+          color: @colourme_accent;
         }
 
         #custom-launcher {
@@ -103,9 +193,19 @@ in
           font-weight: bold;
         }
 
-        #taskbar button.active {
-          background: alpha(@colourme_accent, 0.3);
+        /* Dock: the focused window is underlined, nothing else is tinted. */
+        #taskbar button {
+          background: transparent;
+          padding: 0 ${toString t.space.xs}px;
           border-radius: ${toString t.radius.inner}px;
+        }
+
+        #taskbar button.active {
+          box-shadow: inset 0 -2px @colourme_accent;
+        }
+
+        #taskbar button:hover {
+          background: alpha(@colourme_fg, 0.1);
         }
 
         #tray,

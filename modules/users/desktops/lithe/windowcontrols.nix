@@ -69,14 +69,18 @@ in
               -- `hl.dispatch(...)`, so legacy names (killactive/fullscreen/…)
               -- are invalid Lua and silently do nothing. Actions must use the
               -- Lua dispatch API.
-              on_double_click = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ action = "toggle" })']],
+              -- macOS green semantics: zoom (maximized fullscreen mode: fills
+              -- the workspace but keeps gaps and the bar), not true fullscreen.
+              on_double_click = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']],
             },
           },
         })
 
         hl.plugin.hyprbars.add_button({ bg_color = red, fg_color = glyph, size = 10, icon = "x", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
         hl.plugin.hyprbars.add_button({ bg_color = yellow, fg_color = glyph, size = 10, icon = "-", action = [[hyprctl dispatch 'hl.dsp.window.float({ action = "toggle" })']] })
-        hl.plugin.hyprbars.add_button({ bg_color = green, fg_color = glyph, size = 10, icon = "+", action = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ action = "toggle" })']] })
+        -- Green = maximize toggle (FSMODE_MAXIMIZED), matching the dock's
+        -- right-click action; true fullscreen stays on SUPER+SHIFT+F.
+        hl.plugin.hyprbars.add_button({ bg_color = green, fg_color = glyph, size = 10, icon = "+", action = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']] })
       end
     '';
   };

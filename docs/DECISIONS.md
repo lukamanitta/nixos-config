@@ -344,3 +344,45 @@ plus `boot.supportedFilesystems = [ "vfat" "exfat" "ntfs" ]` for the common
 removable formats. SD cards behind a USB reader/hub need nothing extra — they
 present as ordinary USB mass storage.
 
+
+---
+
+## Desktop shell
+
+### D33 — Fused status+dock bar; one window-switching surface (settled)
+LitheDE's bar is a single top strip that does both jobs macOS splits between the
+menu bar and the Dock: launcher + running windows on the left, status and power
+on the right. The earlier layout showed `wlr/taskbar` *and*
+`hyprland/workspaces` side by side, which duplicated one idea in two mental
+models — app-centric (Windows/macOS) and space-centric (tiling) — and read as
+noise.
+
+Settled behaviour:
+
+- The launcher is a magnifier glyph, not an "Apps" label: it opens a search UI.
+- The dock lists running windows only (`wlr/taskbar`). Left click focuses,
+  middle closes, right toggles maximize. Waybar fires exactly one fixed action
+  per button and cannot chain commands, and Hyprland's foreign-toplevel
+  maximize request only sets the fullscreen mode (it does not move focus), so
+  "focus *and* maximize" is not expressible as a single click.
+- The primary mouse affordance for maximize is the green traffic light, which
+  toggles `FSMODE_MAXIMIZED` (fills the workspace but keeps gaps and the bar)
+  rather than true fullscreen — macOS green semantics.
+- Workspaces are status only: small dots for occupied workspaces (Hyprland
+  destroys empty, unfocused workspaces), never numbers. Clicking a dot switches.
+- The focused dock entry is underlined rather than accent-tinted. When the
+  focused window is maximized the other entries fade, so "where did the other
+  windows go?" is answered by the bar itself.
+
+Rejected: workspaces only (a stranger cannot switch windows with the mouse);
+taskbar only (drops the space indicator keyboard users rely on); a scripted
+global float mode (Hyprland has no float-all; a Lua loop over `hl.get_windows`
+plus map-time rules leaks on every new window and produces exactly the manual
+window clutter tiling exists to avoid).
+
+The fade rule depends on live compositor state, which GTK CSS cannot express
+(no `:has()`), so a small watcher follows Hyprland's event socket and rewrites
+`~/.config/waybar/lithede-state.css` on focus/fullscreen events — the same
+"Nix owns structure, runtime owns the conditional bytes" seam as D27. Waybar
+0.15 has no app grouping and no pinned non-running apps, so a real Dock (pinned
+favourites) would need a custom component, not another waybar module.

@@ -169,14 +169,18 @@ dedicated `services.controlCenter` role is not needed.
 
 ### Panel (waybar, top bar)
 
-- **Left:** launcher button · focused window / taskbar (`wlr/taskbar`, with
-  close/minimize actions).
-- **Center:** workspaces (the dock analogue).
+One fused strip that does the menu-bar and Dock jobs at once (D33):
+
+- **Left:** magnifier launcher button · dock of running windows (`wlr/taskbar`:
+  left click focuses, middle closes, right toggles maximize).
+- **Centre:** workspace dots — occupied workspaces only, click to switch.
 - **Right:** tray (`nm-applet`) · clock · control-center button · power button.
 - Frosted glass: CSS `rgba` surfaces over Hyprland layer blur.
-- **Open design question:** the workspaces module and the per-app taskbar carry
-  overlapping concepts (tiling/space-oriented vs Windows/macOS app-oriented).
-  The layout is under review; see the session notes before changing `panel.nix`.
+- The focused dock entry is underlined; when the focused window is maximized
+  the other entries fade (runtime `~/.config/waybar/lithede-state.css`, written
+  by a small Hyprland-event watcher — see D33).
+- Waybar 0.15 cannot group windows by app or show pinned non-running apps, so
+  the dock is honestly a window list, and pinning would need a custom component.
 
 ### Window decorations
 
@@ -307,6 +311,8 @@ modules/users/desktops/lithe/
    `hl.plugin.load` (HM loads plugin packages only *after* the config is
    parsed), and buttons are added with the plugin's Lua API behind a nil-guard.
 7. ✅ Docs updated (D22 superseded, D29–D31; ROADMAP desktop section).
+8. ✅ Bar redesign: fused status+dock, focus-only dock clicks, workspace dots,
+   maximize on the green traffic light (D33).
 
 **Verified live on the VM (2026-11-19):** hyprbars buttons render and
 close/float/fullscreen work; the redesigned WhiteSur icon/cursor set resolves;

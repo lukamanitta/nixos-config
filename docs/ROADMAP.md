@@ -133,6 +133,8 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
 - [x] Shared compositor base vs per-DE visual config split (D29).
 - [x] Vendored fonts + toolkit cohesion (adw-gtk3 / adwaita-qt6 / WhiteSur) (D31).
 - [x] colourme seams extended to GTK3, GTK4/libadwaita and waybar (D27).
+- [x] Fused status+dock bar: focus-only dock clicks, workspace dots, maximize on
+      the green traffic light (D33).
 - [ ] LitheDE follow-ups: swaync `style.css` theming, hyprlauncher config,
       Qt `qt6ct` colourme seam, real traffic-light glyphs, network picker UX.
 - [ ] LiquoRice: `programs.quickshell.configs` (`Pill`, `lockdaemon`) from
