@@ -174,6 +174,9 @@ dedicated `services.controlCenter` role is not needed.
 - **Center:** workspaces (the dock analogue).
 - **Right:** tray (`nm-applet`) · clock · control-center button · power button.
 - Frosted glass: CSS `rgba` surfaces over Hyprland layer blur.
+- **Open design question:** the workspaces module and the per-app taskbar carry
+  overlapping concepts (tiling/space-oriented vs Windows/macOS app-oriented).
+  The layout is under review; see the session notes before changing `panel.nix`.
 
 ### Window decorations
 
@@ -304,6 +307,12 @@ modules/users/desktops/lithe/
    `hl.plugin.load` (HM loads plugin packages only *after* the config is
    parsed), and buttons are added with the plugin's Lua API behind a nil-guard.
 7. ✅ Docs updated (D22 superseded, D29–D31; ROADMAP desktop section).
+
+**Verified live on the VM (2026-11-19):** hyprbars buttons render and
+close/float/fullscreen work; the redesigned WhiteSur icon/cursor set resolves;
+the colourme runtime theme works on an existing install. Still unverified: the
+seed-stamp refresh (`6730be6`) on a genuinely first login (needs a fresh VM
+profile or a cleared `~/.local/state/colourme/`).
 
 ### Remaining follow-ups
 
