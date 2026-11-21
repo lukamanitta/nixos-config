@@ -129,8 +129,8 @@
         "nixpkgs-ruby30": "nixpkgs-ruby30"
       },
       "locked": {
-        "lastModified": 1795262535,
-        "narHash": "sha256-dVcVXRou4vsPOPsbkq3cPvao5qLbEOh6Khwj/Rv74kU=",
+        "lastModified": 1795264691,
+        "narHash": "sha256-l7urYaJcR3nroMFxO61NI/jhcTyTRiANYMLt3UhOPh4=",
         "path": "/home/luka/projects/code/msi-nix",
         "type": "path"
       },
