@@ -3,16 +3,46 @@
 let
   lua = lib.generators.mkLuaInline;
   pairs = [
-    [ "1" 1 ]
-    [ "2" 2 ]
-    [ "3" 3 ]
-    [ "4" 4 ]
-    [ "5" 5 ]
-    [ "6" 6 ]
-    [ "7" 7 ]
-    [ "8" 8 ]
-    [ "9" 9 ]
-    [ "0" 10 ]
+    [
+      "1"
+      1
+    ]
+    [
+      "2"
+      2
+    ]
+    [
+      "3"
+      3
+    ]
+    [
+      "4"
+      4
+    ]
+    [
+      "5"
+      5
+    ]
+    [
+      "6"
+      6
+    ]
+    [
+      "7"
+      7
+    ]
+    [
+      "8"
+      8
+    ]
+    [
+      "9"
+      9
+    ]
+    [
+      "0"
+      10
+    ]
   ];
   focus = pair: {
     _args = [
@@ -28,18 +58,21 @@ let
   };
 in
 {
-  wayland.windowManager.hyprland.settings.bind = (map focus pairs) ++ (map move pairs) ++ [
-    {
-      _args = [
-        (lua ''mod .. " + mouse_down"'')
-        (lua ''hl.dsp.focus({ workspace = "e+1" })'')
-      ];
-    }
-    {
-      _args = [
-        (lua ''mod .. " + mouse_up"'')
-        (lua ''hl.dsp.focus({ workspace = "e-1" })'')
-      ];
-    }
-  ];
+  wayland.windowManager.hyprland.settings.bind =
+    (map focus pairs)
+    ++ (map move pairs)
+    ++ [
+      {
+        _args = [
+          (lua ''mod .. " + mouse_down"'')
+          (lua ''hl.dsp.focus({ workspace = "e+1" })'')
+        ];
+      }
+      {
+        _args = [
+          (lua ''mod .. " + mouse_up"'')
+          (lua ''hl.dsp.focus({ workspace = "e-1" })'')
+        ];
+      }
+    ];
 }

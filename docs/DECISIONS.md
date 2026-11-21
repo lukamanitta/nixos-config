@@ -441,3 +441,42 @@ the upstream flake: that flake builds from source against nixos-unstable with a
 pinned Rust/zig toolchain, which is a large rebuild for a static binary. The
 hash/version pair is documented in the package and taken from
 `https://herdr.dev/latest.json`; bump both together.
+
+---
+
+## Work environment (MSI)
+
+### D36 — MSI tooling is a separate overlay flake consumed by this config (settled)
+The MSI development environment lives in a separate flake,
+`~/code/msi-nix` (`msi-nix`), pinned here as a `git+file:` input. It owns the
+Ruby 3.0.7 toolchain, the process-compose stack, the `msi` CLI and the
+Home Manager/NixOS modules; `nixos-config` only imports those modules. Keeping
+it separate means the work environment can be shared with another machine (or
+published privately) without dragging personal system configuration along, and
+per-repo flakes can be added later without restructuring this flake. The
+overlay's decisions and roadmap are recorded in `msi-nix/docs/`.
+
+### D37 — Work trees live under `~/code`; there is no `~/Code` (settled)
+`~/code/msi/<repo>` is the work root (`MSI_CODE_ROOT`) and `~/code/msi-nix` is
+the overlay. `~/Code` was only a convenience assumed by documentation; local
+tooling reads `MSI_CODE_ROOT`, and only the server-side `configure` roles
+hardcode a `Code` directory for the deployer user. The Home Manager symlink was
+removed. Other personal projects still live under `~/projects/code` for now;
+consolidating them under `~/code` is a separate cleanup.
+
+### D38 — The NixOS test VM is a disposable agent target (settled)
+The VM is driven over SSH from the workstation: a dedicated key
+(`~/.ssh/id_ed25519_vm`), a SLIRP host forward
+(`hostfwd_add tcp:127.0.0.1:2222-:22`; libvirt's declarative `<portForward>`
+requires the `passt` backend, which is not installed), `wheelNeedsPassword =
+false` and `trusted-users = @wheel` so closures can be copied from the
+workstation. These concessions are for the disposable VM only and must not be
+copied to a real host.
+
+### D39 — LiquoRice uses the WhiteSur cursor; hypridle is off (settled)
+The compositor's built-in cursor was the blue default. LiquoRice now sets
+`home.pointerCursor` and `XCURSOR_THEME=WhiteSur-cursors` (package installed),
+and the running session applies it with `hyprctl setcursor`. Idle/lock is
+disabled for now by not setting `services.idle`; hypridle is still installed and
+its config remains so re-enabling is one line (`idle = lib.mkDefault
+"hypridle";`).

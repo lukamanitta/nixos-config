@@ -69,6 +69,7 @@ around it.
 - [ ] Dendritic refactor — trigger: first real non-test host.
 - [ ] Homelab nodes.
 - [ ] Migrate the main machine to NixOS — gated by the parity checklist.
+- Work environment parity (MSI) is tracked in `msi-nix/docs/ROADMAP.md`.
 
 ---
 
@@ -139,6 +140,8 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
       Qt `qt6ct` colourme seam, real traffic-light glyphs, network picker UX.
 - [x] LiquoRice bootstrap: QML symlinked from `configs/quickshell`, helper
       scripts from `configs/hypr/scripts`, roles set, VM switched to it (D34).
+- [x] LiquoRice cursor: WhiteSur pointers via `home.pointerCursor` and
+      `XCURSOR_THEME`; hypridle disabled for now (D39).
 - [ ] LiquoRice polish: toolkit theming (GTK/Qt/icons), wallpaper, lock-as-
       greeter, pill surface keybinds beyond launcher/clipboard/media.
 - [ ] Autologin + Quickshell lock-as-greeter — deferred (DECISIONS D23/D24).
@@ -148,6 +151,11 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
 - [ ] Per-project `nix develop` dev shells as the primary mechanism.
 - [ ] `mise` as the cross-platform fallback; retire `asdf` and `.tool-versions`.
 - [x] AI tooling parity (opencode + skills).
+- [x] Work (MSI) environment on Nix: overlay flake (`~/code/msi-nix`) with
+      Ruby 3.0.7 shells, process-compose stack, `msi` CLI and HM/NixOS modules
+      (D36–D38). Design and roadmap live in `msi-nix/docs/`.
+- [ ] MSI parity: replace `machine-setup` once the checklist in
+      `msi-nix/docs/ROADMAP.md` passes; port `msi db`, add repo auto-clone.
 - Dev shells are the natural precursor to per-project dendritic modules.
 
 ### Neovim composability
@@ -203,6 +211,7 @@ Endgame, gated by the parity checklist below.
 - [ ] spicetify
 - [ ] VPN
 - [ ] Backups verified
+- [ ] MSI work environment at parity (see `msi-nix/docs/ROADMAP.md`)
 - [ ] Data migration plan
 - [ ] Documented rollback (keep Arch install / snapshots)
 

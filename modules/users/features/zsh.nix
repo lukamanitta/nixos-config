@@ -15,6 +15,5 @@
   # configs/ and is symlinked out-of-store so it remains editable live (D25).
   # Assumes the flake is checked out at ~/nixos-config (see docs/INSTALL.md).
   xdg.configFile."starship.toml".source =
-    config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/nixos-config/configs/starship/starship.toml";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nixos-config/configs/starship/starship.toml";
 }

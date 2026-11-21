@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
 # Removable-media automounter (udiskie). Compositor-agnostic: it provides the
 # `services.removableMedia` role, which the hyprland feature starts at session
@@ -7,18 +12,17 @@
 let
   p = config.my.desktop.programs;
 
-  programOptions =
-    {
-      automount = true;
-      notify = true;
-      tray = false;
-    }
-    // lib.optionalAttrs (p.fileExplorer != null) {
-      file_manager = p.fileExplorer;
-    }
-    // lib.optionalAttrs (p.terminal != null) {
-      terminal = p.terminal;
-    };
+  programOptions = {
+    automount = true;
+    notify = true;
+    tray = false;
+  }
+  // lib.optionalAttrs (p.fileExplorer != null) {
+    file_manager = p.fileExplorer;
+  }
+  // lib.optionalAttrs (p.terminal != null) {
+    terminal = p.terminal;
+  };
 
   settings = {
     program_options = programOptions;
@@ -36,5 +40,6 @@ in
   home.packages = [ pkgs.udiskie ];
 
   xdg.configFile."udiskie/config.yml".source =
-    (pkgs.formats.yaml { }).generate "udiskie-config.yml" settings;
+    (pkgs.formats.yaml { }).generate "udiskie-config.yml"
+      settings;
 }

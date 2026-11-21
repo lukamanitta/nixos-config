@@ -1,5 +1,11 @@
 # VM test run — MSI overlay (`msi-nix`)
 
+> **Status 2026-11-22:** this runbook was executed; results and current state
+> are in `~/code/msi-nix/docs/TESTING.md`. The overlay no longer takes the work
+> repos as flake inputs, so `nix flake check` works without them. The VM is
+> shut down; start it in Boxes and use `~/.local/bin/vm-ssh` to re-add the
+> forward.
+
 You are an agent running on **`luka-nixos-test`**, a disposable NixOS VM. Your
 job is to validate the MSI development overlay end-to-end and do a few desktop
 spot checks, then report. Read this whole file before running anything.
