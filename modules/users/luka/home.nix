@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 
 {
   imports = [
@@ -17,6 +17,7 @@
     ../desktops/liquorice
     ../features/ghostty.nix
     ../features/herdr.nix
+    inputs.msi-nix.homeManagerModules.default
     ../features/zen-browser.nix
   ];
 

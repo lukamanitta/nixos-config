@@ -7,7 +7,17 @@
     ../features/hyprland.nix
     ../features/desktop
     ../../users/luka/system.nix
+    inputs.msi-nix.nixosModules.default
   ];
+
+  # Disposable test VM: agent access over SSH needs unattended sudo.
+  security.sudo.wheelNeedsPassword = false;
+
+  # Docker (Mongo container), *.test hosts, and :443 for Caddy.
+  services.msi = {
+    enable = true;
+    dockerUsers = [ "luka" ];
+  };
 
   networking.hostName = "luka-nixos-test";
   networking.networkmanager.enable = true;
@@ -27,6 +37,7 @@
       # compare. hyprlauncher's QEMU crash no longer applies, so the host-level
       # launcher override is gone; fuzzel stays installed as a fallback.
       my.desktops.environment = "liquorice";
+      programs.msi.enable = true;
       home.packages = [ pkgs.fuzzel ];
 
       my.hyprland = {

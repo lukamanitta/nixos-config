@@ -16,19 +16,25 @@
 
     colourme.url = "github:lukamanitta/colourme";
     colourme.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Personal MSI development overlay (local checkout; path input keeps it
+    # credential-free). Not needed on hosts without the work checkouts.
+    msi-nix.url = "path:/home/luka/projects/code/msi-nix";
   };
 
-  outputs = { nixpkgs, home-manager, ... }@inputs: {
-    nixosConfigurations = {
-      luka-nixos-test = nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./modules/hosts/luka-nixos-test
-          home-manager.nixosModules.home-manager
-        ];
+  outputs =
+    { nixpkgs, home-manager, ... }@inputs:
+    {
+      nixosConfigurations = {
+        luka-nixos-test = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./modules/hosts/luka-nixos-test
+            home-manager.nixosModules.home-manager
+          ];
+        };
       };
-    };
 
-    formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-rfc-style;
-  };
+      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-rfc-style;
+    };
 }

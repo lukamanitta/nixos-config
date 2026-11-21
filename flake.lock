@@ -59,6 +59,19 @@
         "type": "github"
       }
     },
+    "hms-core": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793923840,
+        "narHash": "sha256-saQkhArw05ObQZU3s0DaK5BumMlnYpwRVszkcRhJetI=",
+        "path": "/home/luka/projects/code/msi/hms-core",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/luka/projects/code/msi/hms-core",
+        "type": "path"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -78,6 +91,65 @@
         "ref": "release-26.05",
         "repo": "home-manager",
         "type": "github"
+      }
+    },
+    "homestay-management": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794839594,
+        "narHash": "sha256-ukFWg/QUTR+QCp0BPXhJ9tEChQkFRySYXUsczyP+r5Q=",
+        "path": "/home/luka/projects/code/msi/homestay-management",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/luka/projects/code/msi/homestay-management",
+        "type": "path"
+      }
+    },
+    "lou": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794839594,
+        "narHash": "sha256-FjDJBZFP2LEhMOlqyE8KtUEtwADwqSaUW2Tm2batIdM=",
+        "path": "/home/luka/projects/code/msi/lou",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/luka/projects/code/msi/lou",
+        "type": "path"
+      }
+    },
+    "msi-nix": {
+      "inputs": {
+        "hms-core": "hms-core",
+        "homestay-management": "homestay-management",
+        "lou": "lou",
+        "msi-utils": "msi-utils",
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-ruby30": "nixpkgs-ruby30"
+      },
+      "locked": {
+        "lastModified": 1795262535,
+        "narHash": "sha256-dVcVXRou4vsPOPsbkq3cPvao5qLbEOh6Khwj/Rv74kU=",
+        "path": "/home/luka/projects/code/msi-nix",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/luka/projects/code/msi-nix",
+        "type": "path"
+      }
+    },
+    "msi-utils": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790763537,
+        "narHash": "sha256-u4zrkzDIk9gs+jE3anLTGtufSv0MaaJi1OhvI/FU1xc=",
+        "path": "/home/luka/projects/code/msi/msi-utils",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/luka/projects/code/msi/msi-utils",
+        "type": "path"
       }
     },
     "neovim-nightly-overlay": {
@@ -120,6 +192,38 @@
     },
     "nixpkgs": {
       "locked": {
+        "lastModified": 1795137884,
+        "narHash": "sha256-iKXCN36qYfBni+3nH4vAd98/kshoIsPB2S9mYWhma30=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ab5c18fdedfc8f9bbc9d773f10a540790e2787a7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-ruby30": {
+      "locked": {
+        "lastModified": 1704290814,
+        "narHash": "sha256-LWvKHp7kGxk/GEtlrGYV68qIvPHkU9iToomNFGagixU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "70bdadeb94ffc8806c0570eb5c2695ad29f0e421",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
         "lastModified": 1790533781,
         "narHash": "sha256-F+b8u43BVF5DlM0pz7JQSbtbwKy5PrHIT5zQUekXsD0=",
         "owner": "NixOS",
@@ -138,8 +242,9 @@
       "inputs": {
         "colourme": "colourme",
         "home-manager": "home-manager",
+        "msi-nix": "msi-nix",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "zen-browser": "zen-browser"
       }
     },
