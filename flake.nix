@@ -19,7 +19,7 @@
 
     # Personal MSI development overlay (local checkout; path input keeps it
     # credential-free). Not needed on hosts without the work checkouts.
-    msi-nix.url = "path:/home/luka/projects/code/msi-nix";
+    msi-nix.url = "path:/home/luka/code/msi-nix";
   };
 
   outputs =

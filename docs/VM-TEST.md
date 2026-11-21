@@ -13,7 +13,7 @@ spot checks, then report. Read this whole file before running anything.
   files and tokens stay where they are; redact output.
 - Do not `git commit` or `git push` anywhere. Leave changes in the working tree
   for the user to review.
-- Do not edit anything inside `~/projects/code/msi/<repo>` — those are work
+- Do not edit anything inside `~/code/msi/<repo>` — those are work
   checkouts. Bundle tests use a copy under `/tmp`.
 - Do not run `nix flake update`, do not delete `machine-setup/`, and do not
   start the old Docker compose stack (`machine-setup/dev up`).
@@ -49,9 +49,9 @@ echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0IIlFwV4Aql1wDAiOnQ/tEkL/9AMZ5MkZtpM
 Transfers and builds from the workstation:
 
 ```sh
-rsync -a --exclude .git ~/projects/code/msi-nix/ luka-nixos-test:projects/code/msi-nix/
-rsync -a ~/projects/code/msi/hms-core/ luka-nixos-test:projects/code/msi/hms-core/   # per repo, ~1.8 GB total
-nix copy --to ssh://luka-nixos-test "$(nix build --no-link --print-out-paths ~/projects/code/msi-nix#ruby)"
+rsync -a --exclude .git ~/code/msi-nix/ luka-nixos-test:code/msi-nix/
+rsync -a ~/code/msi/hms-core/ luka-nixos-test:code/msi/hms-core/   # per repo, ~1.8 GB total
+nix copy --to ssh://luka-nixos-test "$(nix build --no-link --print-out-paths ~/code/msi-nix#ruby)"
 ```
 
 `luka` is in `wheel`, so the VM's Nix trusts it as a remote store. Remote `sudo`
@@ -67,8 +67,8 @@ in the VM if memory gets tight.
 | Thing | Value |
 |---|---|
 | NixOS config repo | `/home/luka/nixos-config` (flake output `luka-nixos-test`) |
-| Overlay (this test) | `/home/luka/projects/code/msi-nix` (local git repo, not pushed) |
-| Work repos root | `/home/luka/projects/code/msi` (`~/Code` symlinks here) |
+| Overlay (this test) | `/home/luka/code/msi-nix` (local git repo, not pushed) |
+| Work repos root | `/home/luka/code/msi` |
 | Phase-1 repos | `hms-core`, `homestay-management`, `lou`, `msi-utils` (private, `github.com/mystay/*`) |
 | Expected Ruby | 3.0.7 (p220), OpenSSL 3.0.12, Bundler 2.5.23 |
 | Expected Node | `lou` pins 20.9.0 → overlay maps EOL Node 20 to **22** (documented deviation) |
@@ -105,28 +105,28 @@ in the VM if memory gets tight.
    `gh auth login` on the VM. Everything after this needs the private repos.
 
 4. **Overlay on the VM.** If driving over SSH, copy it from the workstation
-   (`rsync -a --exclude .git ~/projects/code/msi-nix/ luka-nixos-test:projects/code/msi-nix/`);
+   (`rsync -a --exclude .git ~/code/msi-nix/ luka-nixos-test:code/msi-nix/`);
    otherwise `git clone` the pushed remote. Verify:
    ```sh
-   ls /home/luka/projects/code/msi-nix/flake.nix
-   cd /home/luka/projects/code/msi-nix && git status --short   # expect clean or user-known changes
+   ls /home/luka/code/msi-nix/flake.nix
+   cd /home/luka/code/msi-nix && git status --short   # expect clean or user-known changes
    ```
 
 5. **Clone the phase-1 repos** (skip any that already exist):
    ```sh
-   mkdir -p /home/luka/projects/code/msi
+   mkdir -p /home/luka/code/msi
    for r in hms-core homestay-management lou msi-utils; do
-     [ -d "/home/luka/projects/code/msi/$r" ] || \
-       gh repo clone "mystay/$r" "/home/luka/projects/code/msi/$r"
+     [ -d "/home/luka/code/msi/$r" ] || \
+       gh repo clone "mystay/$r" "/home/luka/code/msi/$r"
    done
-   ls /home/luka/projects/code/msi/{hms-core,homestay-management,lou,msi-utils}/.tool-versions
+   ls /home/luka/code/msi/{hms-core,homestay-management,lou,msi-utils}/.tool-versions
    ```
    The overlay's path inputs are hard-coded to those absolute paths, so they
    must exist before any flake command.
 
 ## Phase 1 — evaluate and build
 
-Run everything from `/home/luka/projects/code/msi-nix`.
+Run everything from `/home/luka/code/msi-nix`.
 
 1. ```sh
    nix flake check --no-build
@@ -163,7 +163,7 @@ Do not dirty the checkout. Use `hms-core` (smallest Rails repo):
 
 ```sh
 rm -rf /tmp/msi-test && mkdir -p /tmp/msi-test
-cp -a /home/luka/projects/code/msi/hms-core /tmp/msi-test/hms-core
+cp -a /home/luka/code/msi/hms-core /tmp/msi-test/hms-core
 nix develop .#hms-core --command bash -c '
   export BUNDLE_PATH=/tmp/msi-test/bundle
   cd /tmp/msi-test/hms-core
@@ -238,7 +238,7 @@ Apply these edits, rebuild, and report the diff. Keep them uncommitted.
 `/home/luka/nixos-config/flake.nix` — add to `inputs`:
 
 ```nix
-    msi-nix.url = "path:/home/luka/projects/code/msi-nix";
+    msi-nix.url = "path:/home/luka/code/msi-nix";
 ```
 
 `/home/luka/nixos-config/modules/hosts/luka-nixos-test/default.nix`:
@@ -273,13 +273,12 @@ Verify:
 
 ```sh
 command -v msi
-readlink ~/Code                       # → /home/luka/projects/code/msi
 getent hosts hms-lobby.test aus.hms-lou.test
 id -nG | tr ' ' '\n' | grep -x docker
 sysctl net.ipv4.ip_unprivileged_port_start
 ```
 
-`msi` on PATH comes from the new generation; `~/Code` and the hosts entries are
+`msi` on PATH comes from the new generation; the hosts entries and Docker are
 the module's work. If Docker group membership only appears after re-login, note
 it rather than rebooting.
 
@@ -348,7 +347,7 @@ PASS/FAIL: lobby boot (HTTP code + log excerpt)
 PASS/FAIL: down (containers gone)
 
 ## Phase 4 — host wiring
-PASS/FAIL: rebuild, msi on PATH, ~/Code, hosts, docker group, sysctl
+PASS/FAIL: rebuild, msi on PATH, hosts, docker group, sysctl
 diff of nixos-config changes (uncommitted)
 
 ## Phase 5 — desktop

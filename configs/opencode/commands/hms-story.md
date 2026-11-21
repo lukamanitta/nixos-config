@@ -6,7 +6,7 @@ description: Lite HMS story workflow. Load a Jira ticket, plan it with you, impl
 
 `$ARGUMENTS` is a Jira ticket key followed by optional notes — e.g. `HMS-12345 focus on the reception flow`.
 
-Run this session from `~/projects/code/msi` — the umbrella `opencode.json` there enables the Atlassian MCP, and every target repo sits inside the project root.
+Run this session from `~/code/msi` — the umbrella `opencode.json` there enables the Atlassian MCP, and every target repo sits inside the project root.
 
 The human owns git history: they create the branch, commit, and push. Your job is to load the ticket, plan it with them, implement it in their working tree, and tell them how to test it. You work in the existing clones and never create worktrees.
 
@@ -27,8 +27,8 @@ The human owns git history: they create the branch, commit, and push. Your job i
 
 ### 2. Orient
 
-- Read the discovery cache: `~/projects/code/msi/.hms-kb/index.md`, then the matching `topics/*.md` and `repos/*.md`. Verify anything you rely on; treat the cache as a lead, not truth.
-- Consult the team knowledge base: `~/projects/code/msi/hms-agents/AGENTS.md` and `knowledge/index.json` (filter by project and tags, read the matching KIs). Cite the KIs you apply.
+- Read the discovery cache: `~/code/msi/.hms-kb/index.md`, then the matching `topics/*.md` and `repos/*.md`. Verify anything you rely on; treat the cache as a lead, not truth.
+- Consult the team knowledge base: `~/code/msi/hms-agents/AGENTS.md` and `knowledge/index.json` (filter by project and tags, read the matching KIs). Cite the KIs you apply.
 - Propose the repos this story touches, one line of reasoning each, and **confirm** them with the human.
 - Then check every target repo's branch in one pass and report **all** mismatches together — repo → current branch → expected `<initials>/<TICKET>` — so the human can fix them in one go. Halt until every repo passes.
 - Locate the relevant models, actions, controllers, and components.
@@ -37,7 +37,7 @@ The human owns git history: they create the branch, commit, and push. Your job i
 ### 3. Plan
 
 - Discuss the approach; resolve ambiguities before writing anything down.
-- Write the plan to `~/projects/code/msi/.hms-stories/<TICKET>.md` (template below).
+- Write the plan to `~/code/msi/.hms-stories/<TICKET>.md` (template below).
 - For a risky or financial change, offer an adversarial critique pass; run it only if the human agrees.
 - Present the plan and **wait for explicit approval**.
 - Done when: the human approves.
@@ -82,8 +82,8 @@ Skip:
 
 Where and how:
 
-- A capability spanning repos → `~/projects/code/msi/.hms-kb/topics/<domain>.md`.
-- Mechanics of one repo → `~/projects/code/msi/.hms-kb/repos/<repo>.md`.
+- A capability spanning repos → `~/code/msi/.hms-kb/topics/<domain>.md`.
+- Mechanics of one repo → `~/code/msi/.hms-kb/repos/<repo>.md`.
 - Name topics with the `knowledge/index.json` tags where they fit (`invoicing`, `permissions`, `alerts`, `transfers`, `lightservice`, `mongoid`, ...).
 - A new file → add a one-line entry to `index.md`.
 - Under **Where things live**, **Fast paths**, or **Gotchas**, add one dated bullet per fact in pointer form (paths, names, commands). Check first; merge or update rather than duplicate. Keep it terse.
@@ -136,4 +136,4 @@ Where and how:
 
 ## This machine
 
-Read `~/projects/code/msi/context.md` for the repos, ecosystem map, dev environment (no puma-dev, ports, DB caveat), and test/lint commands. It is also loaded automatically when the session starts from `~/projects/code/msi`.
+Read `~/code/msi/context.md` for the repos, ecosystem map, dev environment (no puma-dev, ports, DB caveat), and test/lint commands. It is also loaded automatically when the session starts from `~/code/msi`.
