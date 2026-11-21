@@ -73,6 +73,7 @@ in
       slurp
       # Providers the shared compositor role defaults used to get from LitheDE.
       hyprpaper
+      whitesur-cursors
       hypridle
       yazi
       cliphist-watch
@@ -106,10 +107,30 @@ in
       fileExplorer = lib.mkDefault "ghostty -e yazi";
     };
 
+    # Hyprland's built-in cursor is the blue one; use the WhiteSur cursors that
+    # match the rest of the shell. XCURSOR_THEME is what Hyprland falls back to
+    # when the hyprcursor theme is absent.
+    home.pointerCursor = {
+      name = "WhiteSur-cursors";
+      package = pkgs.whitesur-cursors;
+      size = 24;
+      gtk.enable = true;
+    };
+
+    wayland.windowManager.hyprland.settings.env = [
+      {
+        _args = [
+          "XCURSOR_THEME"
+          "WhiteSur-cursors"
+        ];
+      }
+    ];
+
     my.desktop.services = {
       statusBar = lib.mkDefault "quickshell -n -d";
       wallpaper = lib.mkDefault "hyprpaper";
-      idle = lib.mkDefault "hypridle";
+      # hypridle is disabled for now; set `idle = lib.mkDefault "hypridle";`
+      # to bring the idle/lock timer back.
       clipboardWatcher = lib.mkDefault "${lib.getExe cliphist-watch}";
       # Notifications and the transient OSD are provided by the pill itself,
       # so `services.notification` / `services.osd` stay null.
