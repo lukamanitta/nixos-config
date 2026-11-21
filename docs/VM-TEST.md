@@ -121,8 +121,9 @@ in the VM if memory gets tight.
    done
    ls /home/luka/code/msi/{hms-core,homestay-management,lou,msi-utils}/.tool-versions
    ```
-   The overlay's path inputs are hard-coded to those absolute paths, so they
-   must exist before any flake command.
+   The overlay no longer takes the repos as flake inputs (its versions are
+   pinned in `flake.nix`), so evaluation works without them. They are required
+   for the shells themselves and for the stack's working directories.
 
 ## Phase 1 — evaluate and build
 
@@ -238,7 +239,7 @@ Apply these edits, rebuild, and report the diff. Keep them uncommitted.
 `/home/luka/nixos-config/flake.nix` — add to `inputs`:
 
 ```nix
-    msi-nix.url = "path:/home/luka/code/msi-nix";
+    msi-nix.url = "git+file:///home/luka/code/msi-nix";
 ```
 
 `/home/luka/nixos-config/modules/hosts/luka-nixos-test/default.nix`:
