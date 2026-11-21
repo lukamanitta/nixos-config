@@ -59,58 +59,6 @@
         "type": "github"
       }
     },
-    "hams-design-system": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1795090904,
-        "narHash": "sha256-gPs+hzXORde13u76cXhNuMEowzuV1/Eq0lB2WQuyyCs=",
-        "path": "/home/luka/code/msi/hams-design-system",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/hams-design-system",
-        "type": "path"
-      }
-    },
-    "hms-agents": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1795091468,
-        "narHash": "sha256-O2YInKGxmBZ2Q+ce3Fj9+LWuPZCpXUM+IVwdQ8lK7tI=",
-        "path": "/home/luka/code/msi/hms-agents",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/hms-agents",
-        "type": "path"
-      }
-    },
-    "hms-core": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1793923840,
-        "narHash": "sha256-saQkhArw05ObQZU3s0DaK5BumMlnYpwRVszkcRhJetI=",
-        "path": "/home/luka/code/msi/hms-core",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/hms-core",
-        "type": "path"
-      }
-    },
-    "hms-ecosystem": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1792464854,
-        "narHash": "sha256-7aabYPcTc5xQBkeBjaBS7ujGqlrGG8LbaZ/hS94tKRE=",
-        "path": "/home/luka/code/msi/hms-ecosystem",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/hms-ecosystem",
-        "type": "path"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -132,66 +80,23 @@
         "type": "github"
       }
     },
-    "homestay-management": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1794839594,
-        "narHash": "sha256-ukFWg/QUTR+QCp0BPXhJ9tEChQkFRySYXUsczyP+r5Q=",
-        "path": "/home/luka/code/msi/homestay-management",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/homestay-management",
-        "type": "path"
-      }
-    },
-    "lou": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1794839594,
-        "narHash": "sha256-FjDJBZFP2LEhMOlqyE8KtUEtwADwqSaUW2Tm2batIdM=",
-        "path": "/home/luka/code/msi/lou",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/lou",
-        "type": "path"
-      }
-    },
     "msi-nix": {
       "inputs": {
-        "hams-design-system": "hams-design-system",
-        "hms-agents": "hms-agents",
-        "hms-core": "hms-core",
-        "hms-ecosystem": "hms-ecosystem",
-        "homestay-management": "homestay-management",
-        "lou": "lou",
-        "msi-utils": "msi-utils",
         "nixpkgs": "nixpkgs",
         "nixpkgs-ruby30": "nixpkgs-ruby30"
       },
       "locked": {
-        "lastModified": 1795266521,
-        "narHash": "sha256-eR8LZJz6NLkGjmajEkqOkx/jH3thASu2FqRodjsvbIg=",
-        "path": "/home/luka/code/msi-nix",
-        "type": "path"
+        "lastModified": 1795266715,
+        "narHash": "sha256-0TpxZZxo6958IGgMEQjnk/3vZIyp1PW3vMk4SjM1s2U=",
+        "ref": "refs/heads/main",
+        "rev": "5678382fa27c5b61804cc6abc05e1c50e96452a9",
+        "revCount": 9,
+        "type": "git",
+        "url": "file:///home/luka/code/msi-nix"
       },
       "original": {
-        "path": "/home/luka/code/msi-nix",
-        "type": "path"
-      }
-    },
-    "msi-utils": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1790763537,
-        "narHash": "sha256-u4zrkzDIk9gs+jE3anLTGtufSv0MaaJi1OhvI/FU1xc=",
-        "path": "/home/luka/code/msi/msi-utils",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/luka/code/msi/msi-utils",
-        "type": "path"
+        "type": "git",
+        "url": "file:///home/luka/code/msi-nix"
       }
     },
     "neovim-nightly-overlay": {
