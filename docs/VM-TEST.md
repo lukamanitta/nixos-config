@@ -22,6 +22,46 @@ spot checks, then report. Read this whole file before running anything.
 Report format at the end: one section per phase, each step marked PASS / FAIL /
 SKIP with the command and a short output excerpt, then a "Blockers" list.
 
+## Driving the VM from the workstation
+
+The VM is a user-session libvirt domain (`nixos-26.05-`, GNOME Boxes, 4 GB RAM /
+8 vCPU) using SLIRP networking, so there is no inbound address until a forward
+is added. On the workstation:
+
+```sh
+# every time the domain starts (SLIRP forwards are not persistent)
+virsh -c qemu:///session qemu-monitor-command nixos-26.05- \
+  --hmp 'hostfwd_add tcp:127.0.0.1:2222-:22'
+
+ssh luka-nixos-test            # Host entry: 127.0.0.1:2222, user luka, key ~/.ssh/id_ed25519_vm
+```
+
+One-time authorization: the key is declared in
+`modules/users/luka/system.nix`, but a running generation that predates it needs
+either a rebuild or this in the VM console:
+
+```sh
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0IIlFwV4Aql1wDAiOnQ/tEkL/9AMZ5MkZtpMdgjUZK agent@arch -> luka-nixos-test' \
+  >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+```
+
+Transfers and builds from the workstation:
+
+```sh
+rsync -a --exclude .git ~/projects/code/msi-nix/ luka-nixos-test:projects/code/msi-nix/
+rsync -a ~/projects/code/msi/hms-core/ luka-nixos-test:projects/code/msi/hms-core/   # per repo, ~1.8 GB total
+nix copy --to ssh://luka-nixos-test "$(nix build --no-link --print-out-paths ~/projects/code/msi-nix#ruby)"
+```
+
+`luka` is in `wheel`, so the VM's Nix trusts it as a remote store. Remote `sudo`
+(`nixos-rebuild --target-host`) will prompt for a password; either run rebuilds
+in the VM console or ask the user before changing sudo policy.
+
+Resource note: 4 GB is enough for one Rails app plus Caddy/Redis/Mongo, but not
+all five. Build Ruby on the workstation and `nix copy` it rather than building
+in the VM if memory gets tight.
+
 ## Facts you need
 
 | Thing | Value |
@@ -64,15 +104,9 @@ SKIP with the command and a short output excerpt, then a "Blockers" list.
    If it is not authenticated, **stop here** and ask the user to run
    `gh auth login` on the VM. Everything after this needs the private repos.
 
-4. **Get the overlay onto the VM.** It exists only on the workstation. Use the
-   transfer the user provides; preferred:
-   ```sh
-   rsync -a --exclude .git \
-     <arch-user>@<arch-host>:/home/luka/projects/code/msi-nix/ \
-     /home/luka/projects/code/msi-nix/
-   ```
-   Alternative: `git clone <remote> /home/luka/projects/code/msi-nix` if the
-   user has pushed it. Verify:
+4. **Overlay on the VM.** If driving over SSH, copy it from the workstation
+   (`rsync -a --exclude .git ~/projects/code/msi-nix/ luka-nixos-test:projects/code/msi-nix/`);
+   otherwise `git clone` the pushed remote. Verify:
    ```sh
    ls /home/luka/projects/code/msi-nix/flake.nix
    cd /home/luka/projects/code/msi-nix && git status --short   # expect clean or user-known changes
