@@ -10,8 +10,13 @@
     inputs.msi-nix.nixosModules.default
   ];
 
-  # Disposable test VM: agent access over SSH needs unattended sudo.
+  # Disposable test VM: agent access over SSH needs unattended sudo, and the
+  # remote store must accept unsigned paths copied from the workstation.
   security.sudo.wheelNeedsPassword = false;
+  nix.settings.trusted-users = [
+    "root"
+    "@wheel"
+  ];
 
   # Docker (Mongo container), *.test hosts, and :443 for Caddy.
   services.msi = {
