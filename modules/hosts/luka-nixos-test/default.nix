@@ -42,7 +42,11 @@
       # compare. hyprlauncher's QEMU crash no longer applies, so the host-level
       # launcher override is gone; fuzzel stays installed as a fallback.
       my.desktops.environment = "liquorice";
-      programs.msi.enable = true;
+      programs.msi = {
+        enable = true;
+        # Mongo/Redis/Caddy at login; each app starts on its first request.
+        systemd.enable = true;
+      };
       home.packages = [ pkgs.fuzzel ];
 
       my.hyprland = {
