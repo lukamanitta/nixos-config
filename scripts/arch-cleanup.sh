@@ -71,6 +71,9 @@ fi
 if command -v paru >/dev/null 2>&1; then
   echo "paru cache: $(size "$HOME/.cache/paru")"
   if ((APPLY)); then paru -Scc --noconfirm; else echo "  + paru -Scc --noconfirm"; fi
+  # -Scc cleans the package cache but not the AUR git clones/build trees;
+  # those live under ~/.cache/paru/clone and are re-cloned on demand.
+  run rm -rf "$HOME/.cache/paru"
 else
   run rm -rf "$HOME/.cache/paru"
 fi
