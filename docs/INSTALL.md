@@ -152,7 +152,13 @@ skip the new-host work: after step 3, overwrite
 file (they will be nearly identical), then `nixos-install` that host. Keep the
 old copy until the new install boots.
 
-## 9. Dev machine (full replacement, no dual-boot) notes
+## 9. Dev machine (`luka-workstation`) notes
+
+The current plan is a **dual-boot trial** on the workstation, then a full
+replacement. Host-specific layout, backup/cleanup scripts, Windows
+`efiDeviceHandle`, creative apps and post-install checks live in
+[WORKSTATION.md](./WORKSTATION.md). Use this section only for the eventual
+full replacement:
 
 Switching the machine to NixOS rather than dual-booting, so it is a clean
 install — but destructive:

@@ -480,3 +480,49 @@ and the running session applies it with `hyprctl setcursor`. Idle/lock is
 disabled for now by not setting `services.idle`; hypridle is still installed and
 its config remains so re-enabling is one line (`idle = lib.mkDefault
 "hypridle";`).
+
+---
+
+## Workstation (Arch → NixOS)
+
+### D40 — `luka-workstation` starts as a dual-boot trial (settled)
+The workstation is a Ryzen 9800X3D + RX 9070 XT on a Gigabyte B850M. It gets its
+own host entry and a **separate 1 GiB ESP + systemd-boot** while Arch keeps its
+512 MiB ESP/rEFInd as the fallback. Windows lives on its own ESP on the second
+NVMe; systemd-boot reaches it through the EDK2 shell handle (`map -c`), with the
+firmware menu as the fallback until that handle is set. After a full NixOS
+workday, Arch is wiped and NixOS takes the whole disk. See
+[WORKSTATION.md](./WORKSTATION.md).
+
+### D41 — LUKS2 + btrfs subvolumes; Secure Boot is deferred (settled)
+The NixOS partition is LUKS2 (passphrase) with btrfs `@`, `@home`, `@nix`
+subvolumes and zstd; the existing 4 GiB swap partition is reused. Secure Boot
+is intentionally postponed until after Arch is removed, then lanzaboote with
+custom keys.
+
+### D42 — Creative apps are native; Affinity is a flake (settled)
+Slack, Spotify, Discord, VLC, OBS and DaVinci are native nixpkgs packages; no
+Flatpak for the must-have set. Affinity v3 comes from
+`mrshmllow/affinity-nix` (Wine prefix built in Nix, unfree, vendor installer,
+binary cache at `cache.forall.systems`) rather than the 2 GB AppImage. DaVinci
+on RDNA4 is a known risk because nixpkgs 26.05 ships ROCm 7.2.3; Arch/Windows
+remain the fallback until that stack is proven. Discord is the official native
+client first; Vesktop is the fallback if Wayland screen sharing is poor.
+
+### D43 — OpenRGB/CoolerControl are seeded, not locked (settled)
+OpenRGB runs its SDK server with the `true-white` profile; the GUI can still
+connect, and `colourme`'s `openrgb -c ...` hook targets the server. Profiles and
+the CoolerControl 5.x `config.toml`/`overrides.toml` are committed under the
+host directory and seeded once into `/var/lib/...`; the daemon owns them after
+that. CoolerControl comes from `Daaboulex/coolercontrol-nix` (5.1.2; nixpkgs is
+4.3.0). RAM detection on the ENE controllers is inconsistent; it is **not**
+retried from Nix for now and will be investigated after the switch.
+
+### D44 — Google Drive is a tuned rclone mount; backups are restic (settled)
+`rclone mount` with `--vfs-cache-mode full` (30 GiB cache by default, tunable via
+`my.gdrive`) replaces the old cache-less mount that made Drive slow. `gdrive-pin`
+copies selected paths to `~/GoogleDrive-offline` for guaranteed offline access.
+The OAuth config stays in `~/.config/rclone/rclone.conf`. Backups use restic to
+`rclone:gdrive:backups/luka-workstation`, with the password outside git; browser
+profiles are mostly skipped because Mozilla sync covers them.
+

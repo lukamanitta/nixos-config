@@ -70,6 +70,8 @@ around it.
 - [ ] Homelab nodes.
 - [ ] Migrate the main machine to NixOS — gated by the parity checklist.
 - Work environment parity (MSI) is tracked in `msi-nix/docs/ROADMAP.md`.
+- Workstation plan, partition layout and install runbook:
+  [WORKSTATION.md](./WORKSTATION.md).
 
 ---
 
@@ -77,8 +79,8 @@ around it.
 
 ### Foundation / flake architecture
 - NixOS `26.05` (stable), Home Manager `release-26.05`, `neovim-nightly-overlay`.
-- One host today (`luka-nixos-test`); modules kept multi-host-shaped from the
-  start.
+- Two hosts: `luka-nixos-test` (disposable VM) and `luka-workstation`
+  (dual-boot trial); modules stay multi-host-shaped.
 - Current layout:
   - `modules/hosts/<host>/` — machine-specific host config (+ hardware).
   - `modules/hosts/core.nix` — host-global settings.
@@ -194,7 +196,20 @@ nodes (e.g. attached to TVs).
 - Provides the **second host** that triggers the dendritic refactor.
 
 ### Main machine migration (Arch → NixOS)
-Endgame, gated by the parity checklist below.
+Endgame, gated by the parity checklist below. Plan and runbook:
+[WORKSTATION.md](./WORKSTATION.md).
+
+- [x] Define `luka-workstation`: hardware, creative stack, OpenRGB/CoolerControl
+      seed, rclone Drive mount, backup/cleanup scripts.
+- [ ] Back up `/home` with restic and verify the snapshot.
+- [ ] Clean up Arch caches/build trees and shrink btrfs for a 1 GiB NixOS ESP +
+      LUKS/btrfs root.
+- [ ] Install the dual-boot NixOS system; add the Windows EDK2 handle.
+- [ ] Validate Affinity, OBS, Spotify/Slack/Discord, OpenRGB, CoolerControl,
+      gdrive mount, Tailscale, MSI stack.
+- [ ] One full NixOS workday; then wipe Arch and take the whole disk.
+- [ ] Secure Boot (lanzaboote + custom keys) after Arch is gone.
+- [ ] Revisit Resolve on RDNA4 once ROCm/OpenCL is known-good.
 
 ---
 
@@ -203,9 +218,12 @@ Endgame, gated by the parity checklist below.
 - [ ] Terminal (ghostty/tmux/fish) at parity
 - [ ] Editor + LSPs (Neovim) at parity
 - [x] AI agent setup (opencode + skills) at parity
-- [ ] Browser
+- [ ] Browser (Zen, including Widevine/DRM)
 - [ ] Slack
 - [ ] Tailscale
+- [ ] Creative: Affinity v3, OBS, DaVinci Resolve (or a documented fallback)
+- [ ] OpenRGB + CoolerControl on the real hardware
+- [ ] Google Drive on-demand mount + offline pinning
 - [ ] Hyprland / Quickshell stable for one week
 - [ ] colourme theme pipeline
 - [ ] spicetify
