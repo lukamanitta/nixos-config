@@ -1,0 +1,9 @@
+# CoolerControl display-name overrides.
+# Managed by coolercontrold: comments are not preserved on rewrite.
+# Hand edits are applied at the next daemon startup.
+
+[devices.fa49f4645cba12961942172e0455e53675b4adbc2ed077a740863e40266e9803]
+
+[devices.fa49f4645cba12961942172e0455e53675b4adbc2ed077a740863e40266e9803.channels]
+fan1 = { label = "Radiator Exhaust Fans" }
+fan2 = { label = "Intake Fans" }

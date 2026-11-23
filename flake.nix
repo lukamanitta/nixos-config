@@ -17,6 +17,15 @@
     colourme.url = "github:lukamanitta/colourme";
     colourme.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Affinity v3 packaged as a Wine prefix by a community flake. Keep its
+    # own nixpkgs pin: Wine/prefix compatibility is sensitive to it.
+    affinity-nix.url = "github:mrshmllow/affinity-nix";
+
+    # CoolerControl 5.x + a seedable daemon config; nixpkgs is still on 4.x.
+    coolercontrol.url = "github:Daaboulex/coolercontrol-nix";
+    coolercontrol.inputs.nixpkgs.follows = "nixpkgs";
+    coolercontrol.inputs.home-manager.follows = "home-manager";
+
     # Personal MSI development overlay (local checkout; path input keeps it
     # credential-free). Not needed on hosts without the work checkouts.
     msi-nix.url = "git+file:///home/luka/code/msi-nix";
@@ -30,6 +39,14 @@
           specialArgs = { inherit inputs; };
           modules = [
             ./modules/hosts/luka-nixos-test
+            home-manager.nixosModules.home-manager
+          ];
+        };
+
+        luka-workstation = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./modules/hosts/luka-workstation
             home-manager.nixosModules.home-manager
           ];
         };
