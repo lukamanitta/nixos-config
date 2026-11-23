@@ -16,6 +16,8 @@ and NixOS takes the whole disk. Windows stays on `nvme1n1` throughout.
 - `modules/hosts/features/creative.nix` — Affinity, DaVinci, Discord, Slack,
   Spotify, VLC, OBS; the narrow unfree allow-list and the Affinity overlay.
 - `modules/users/features/gdrive.nix` — rclone Drive mount and `gdrive-pin`.
+- `modules/users/features/openrgb.nix` — user OpenRGB SDK server; the NixOS
+  module still supplies udev/i2c/the package, but its root service is disabled.
 - `scripts/arch-cleanup.sh`, `scripts/pre-nixos-backup.sh` — run before the
   disk is touched.
 
@@ -40,8 +42,10 @@ and NixOS takes the whole disk. Windows stays on `nvme1n1` throughout.
   proven; do not block the NixOS switch on it. The package is disabled by
   default (`my.creative.davinciResolve = true` to install it) because the
   nixpkgs 20.3.2 source fetch currently fails before the build starts.
-- **OpenRGB/CoolerControl.** OpenRGB server owns `true-white`; its profiles and
-  the CoolerControl `config.toml`/`overrides.toml` are seeded from
+- **OpenRGB/CoolerControl.** OpenRGB runs as the user (the system module still
+  provides udev/i2c and disables its root service); the server owns `true-white`
+  and reads the profiles from `~/.config/OpenRGB`. The CoolerControl
+  `config.toml`/`overrides.toml` are seeded from
   `modules/hosts/luka-workstation/files/`. CoolerControl comes from
   `Daaboulex/coolercontrol-nix` (5.1.2; nixpkgs is on 4.3.0). RAM detection is
   known to be inconsistent and is deliberately not retried yet; `colourme`’s
@@ -60,7 +64,9 @@ and NixOS takes the whole disk. Windows stays on `nvme1n1` throughout.
    keep the restic password somewhere off-machine.
 2. **Free space.** `./scripts/arch-cleanup.sh` (dry run), then `--apply`.
    Review the snapper list and delete old timeline snapshots manually. Keep a
-   recent snapshot and one taken just before partitioning.
+   recent snapshot and one taken just before partitioning. The script keeps the
+   DaVinci AUR build tree by default (pass `--davinci-build` only once Resolve
+   is proven on NixOS).
 3. **Shrink Arch, create NixOS.** From the Arch live system (not the running
    root), shrink `nvme0n1p3` to free ~100 GiB, then create:
    - 1 GiB FAT32 ESP, label `NIXBOOT`
