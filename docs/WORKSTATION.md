@@ -72,10 +72,23 @@ Built on the Arch workstation, not installed yet:
 - OpenRGB, CoolerControl, gdrive, Tailscale, MSI systemd units: configured,
   not yet exercised on the real hardware.
 
+Backup and snapshots:
+
+- restic snapshot `12d1374a` (`pre-nixos`, 36.5 GiB, ~135k files) in
+  `rclone:gdrive:backups/luka-workstation`; password in
+  `~/.config/restic/luka-workstation.pass`.
+- `restic check --read-data-subset=1%`: no errors.
+- Restored `nixos-config/flake.nix` from the snapshot and compared it: match.
+- Snapper keeps `1`, `1157`, `2533`, `2535`, `3124`–`3127` and
+  `3128 Pre NixOS install`; all older timeline/package snapshots are deleted.
+- `/home` has ~187 GiB free. The paru cache and DaVinci AUR build tree are
+  intentionally retained for now.
+
 ## Install runbook (when ready)
 
-1. **Back up first.** `./scripts/pre-nixos-backup.sh`; verify the snapshot and
-   keep the restic password somewhere off-machine.
+1. **Back up first.** Done for the current state (`12d1374a`); re-run
+   `./scripts/pre-nixos-backup.sh` after any last-minute file changes. Keep the
+   restic password somewhere off-machine.
 2. **Free space.** `./scripts/arch-cleanup.sh` (dry run), then `--apply`.
    Review the snapper list and delete old timeline snapshots manually. Keep a
    recent snapshot and one taken just before partitioning. The script keeps the

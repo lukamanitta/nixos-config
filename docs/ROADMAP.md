@@ -201,7 +201,9 @@ Endgame, gated by the parity checklist below. Plan and runbook:
 
 - [x] Define `luka-workstation`: hardware, creative stack, OpenRGB/CoolerControl
       seed, rclone Drive mount, backup/cleanup scripts.
-- [ ] Back up `/home` with restic and verify the snapshot.
+- [x] Back up `/home` with restic and verify the snapshot
+      (`12d1374a`, 36.5 GiB; `restic check --read-data-subset=1%` and a test
+      restore passed).
 - [ ] Clean up Arch caches/build trees and shrink btrfs for a 1 GiB NixOS ESP +
       LUKS/btrfs root.
 - [ ] Install the dual-boot NixOS system; add the Windows EDK2 handle.
