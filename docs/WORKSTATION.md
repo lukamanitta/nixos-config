@@ -58,6 +58,20 @@ and NixOS takes the whole disk. Windows stays on `nvme1n1` throughout.
   `~/.config/restic/luka-workstation.pass` (never committed). Browser profiles
   are mostly skipped; Mozilla sync covers them.
 
+## Validation (2026-11-23)
+
+Built on the Arch workstation, not installed yet:
+
+- `nix flake check --no-build`: passes for `luka-nixos-test` and
+  `luka-workstation`.
+- Home Manager generation for `luka-workstation`: builds.
+- Full `luka-workstation` system: builds; closure ≈ 19.4 GiB.
+- `affinity-v3`: builds; ≈ 6.2 GiB including the Wine/prefix closure.
+- `coolercontrold` 5.1.2, Slack, Discord, Spotify, OBS: build.
+- DaVinci Resolve: source fetch fails (vendor server); opt-in and unverified.
+- OpenRGB, CoolerControl, gdrive, Tailscale, MSI systemd units: configured,
+  not yet exercised on the real hardware.
+
 ## Install runbook (when ready)
 
 1. **Back up first.** `./scripts/pre-nixos-backup.sh`; verify the snapshot and
