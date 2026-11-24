@@ -71,6 +71,10 @@ next_workspace = ["prefix+)", "prefix+shift+j"]
 [ui]
 # tmux new-window creates a window immediately; skip Herdr's tab-name prompt.
 prompt_new_tab_name = false
+pane_borders = "auto"
+pane_outer_borders = false
+pane_gaps = false
+pane_scrollbars = false
 
 # Not ported: tmux layout presets (\\, =, +), send-prefix (a), status-bar
 # styling, and window-rename hooks. Herdr has no equivalent layout-preset
