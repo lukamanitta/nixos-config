@@ -183,6 +183,12 @@ manifest under `chrome/colourme/`. The module stats the runtime file itself
 rather than the symlink, because `nsIFile.lastModifiedTime` does not follow
 symlinks.
 
+The template paints the sidebar through
+`--zen-navigator-toolbox-background` and the top toolbar through a direct
+`#zen-appcontent-navbar-wrapper` rule: Zen moves the toolbar outside
+`#navigator-toolbox` and gives it no background of its own, so the toolbox
+variable alone never reaches it.
+
 If Zen ever ships native userChrome.css reloading (or a Sine-style reload hook),
 drop the `extraPrefs`/autoconfig override and let colourme write the profile
 file directly.

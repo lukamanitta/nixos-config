@@ -1,6 +1,15 @@
 /* prettier-ignore */
 :root {
-  --zen-main-browser-background: #{{hex: base11 || hex: multiply_brightness(base00, 0.7) || hex: multiply_brightness(background, 0.7)}} !important;
+  --colourme-zen-surface: #{{hex: base11 || hex: multiply_brightness(base00, 0.7) || hex: multiply_brightness(background, 0.7)}} !important;
+  --zen-main-browser-background: var(--colourme-zen-surface) !important;
+  --zen-navigator-toolbox-background: var(--colourme-zen-surface) !important;
   --zen-primary-color: #{{hex: accent || hex: regular.blue}} !important;
   --toolbox-textcolor: #{{hex: base05 || hex: foreground || hex: regular.white}} !important;
+}
+
+/* The top toolbar lives in #zen-appcontent-navbar-wrapper, outside
+   #navigator-toolbox, and paints no background of its own, so give it the
+   same surface explicitly. */
+#zen-appcontent-navbar-wrapper {
+  background-color: var(--colourme-zen-surface) !important;
 }
