@@ -73,7 +73,7 @@
   boot.loader.systemd-boot.edk2-uefi-shell.enable = true;
   boot.loader.systemd-boot.windows."Windows" = {
     title = "Windows";
-    efiDeviceHandle = "FS1";
+    efiDeviceHandle = "FS0";
     sortKey = "z_windows";
   };
   boot.loader.systemd-boot.configurationLimit = 10;
