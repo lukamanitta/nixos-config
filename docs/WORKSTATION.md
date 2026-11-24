@@ -173,7 +173,9 @@ Not yet verified — do these before declaring the trial passed:
       `/var/lib/coolercontrol/config.toml`.
 - [ ] `rclone-gdrive` mount at `~/mnt/gdrive`, and `gdrive-pin`.
 - [ ] Wi-Fi (RTL8852CE) and Bluetooth pairing — both untested on NixOS.
-- [ ] Monitor layout: `DP-2` at `0x0` and `HDMI-A-2` at `0x1080`, both preferred.
+- [ ] Monitor layout: `DP-2` at `0x0` (144 Hz) and `HDMI-A-2` at `0x1080`
+      (114.7 Hz modeline; see
+      [WORKSTATION-TROUBLESHOOTING.md](./WORKSTATION-TROUBLESHOOTING.md#arzopa-hdmi-signal-drops)).
 - [ ] DaVinci Resolve: still opt-in (`my.creative.davinciResolve = true`) and
       still unproven on RDNA4 + ROCm 7.2.x.
 - [ ] A full workday on NixOS, then plan Arch removal.

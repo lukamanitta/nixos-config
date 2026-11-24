@@ -122,8 +122,13 @@
             scale = "1";
           }
           {
+            # The ARZOPA drops its HDMI signal intermittently at 144 Hz and
+            # 120 Hz (the host logs nothing — the sink loses sync). 265.75 MHz
+            # is stable. See docs/WORKSTATION-TROUBLESHOOTING.md, "ARZOPA HDMI
+            # signal drops". Monitor-specific: drop the modeline if the
+            # display is replaced.
             output = "HDMI-A-2";
-            mode = "highrr";
+            mode = "modeline 265.75 1920 1968 2000 2080 1080 1083 1088 1111 +hsync +vsync";
             position = "0x1080";
             scale = "1";
           }

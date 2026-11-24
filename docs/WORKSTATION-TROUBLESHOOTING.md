@@ -21,6 +21,7 @@ actually happened on this machine, with the cause and the fix that worked.
 | `nix flake check` fails on the Mac | [Flake evaluation on the Mac](#flake-evaluation-on-the-mac) |
 | `/boot` fills up | [ESP size](#esp-size) |
 | Rebuild seems to ignore a kernel parameter | [Kernel params need a reboot](#kernel-params-need-a-reboot) |
+| HDMI monitor blanks and flashes its input overlay | [ARZOPA HDMI signal drops](#arzopa-hdmi-signal-drops) |
 
 ## Disk and partition work
 
@@ -168,6 +169,46 @@ generation, not the running kernel. Verify with `cat /proc/cmdline`.
 p4 is 1 GiB with `configurationLimit = 10`. Each generation costs roughly
 50–60 MiB (kernel + initrd), so 10 generations plus systemd-boot is tight. Check
 `df -h /boot` after a few rebuilds and lower the limit if it climbs past ~70%.
+
+## Displays
+
+### ARZOPA HDMI signal drops
+
+**Symptom:** the ARZOPA portable panel on `HDMI-A-2` (RX 9070 XT) blacks out
+for about a second and returns showing its "HDMI" input overlay. At 144 Hz it
+happened several times a minute; at 120 Hz it still happened, just less often.
+
+**Diagnosis:** nothing appears host-side during a dropout. `journalctl -k`
+logs no link-training line, `udevadm monitor --udev --subsystem-match=drm`
+emits no event, and `status` / `enabled` / `dpms` under
+`/sys/class/drm/card1-HDMI-A-2/` never change. The GPU keeps the pipe enabled
+— the sink loses sync and re-acquires. Arch behaved the same way, so this is
+not the NixOS kernel, amdgpu version, or Hyprland. The panel's EDID declares a
+360 MHz TMDS limit and its 144 Hz mode already runs at 332.77 MHz reduced
+blanking (92 % of that limit), so the link is marginal rather than broken.
+
+**Fix:** pin a modeline below the failing clock in `my.hyprland.monitors`
+(`modules/hosts/luka-workstation/default.nix`). Measured 2026-11-24:
+
+| clock | refresh | result |
+|---|---|---|
+| 332.77 MHz | 144 Hz (EDID) | drops within a minute |
+| 297.00 MHz | 120 Hz (EDID) | drops within minutes |
+| 265.75 MHz | 114.7 Hz | stable |
+
+The modeline reuses the panel's own reduced-blanking geometry (2080×1111,
+taken from its 144 Hz DTD):
+
+```nix
+mode = "modeline 265.75 1920 1968 2000 2080 1080 1083 1088 1111 +hsync +vsync";
+```
+
+Clock = 2080 × 1111 × refresh; nothing above ~265 MHz has held. The modeline
+is specific to this panel, so remove it if the display is replaced.
+
+**Open:** the 3 m JSAUX mini-HDMI→HDMI cable has only the owner's Windows
+recollection as evidence that it can carry 144 Hz, so a shorter certified
+cable may still allow a higher rate.
 
 ## it87 and the IT8696
 
