@@ -1,0 +1,24 @@
+From the upstream fix for layer-surface keyboard focus restore,
+https://github.com/hyprwm/Hyprland/pull/14953, released in Hyprland 0.56.0.
+
+Without this, a layer surface that releases keyboard interactivity
+(zwlr_layer_surface_v1.set_keyboard_interactivity(0)) leaves the seat's
+keyboard focus on the surface, because CFocusState::rawWindowFocus early-returns
+when the window is unchanged. The symptom is a focused window that stops
+receiving keystrokes after a Quickshell surface closes until another window is
+focused and re-focused (Hyprland issues #8293, discussion #14285).
+
+Remove once nixpkgs ships Hyprland >= 0.56.0.
+
+--- a/src/desktop/state/FocusState.cpp
++++ b/src/desktop/state/FocusState.cpp
+@@ -95,9 +95,6 @@ void CFocusState::rawWindowFocus(PHLWINDOW pWindow, eFocusReason reason, SP<CWLS
+     static auto PFOLLOWMOUSE        = CConfigValue<Config::INTEGER>("input:follow_mouse");
+     static auto PSPECIALFALLTHROUGH = CConfigValue<Config::INTEGER>("input:special_fallthrough");
+ 
+-    if (pWindow == m_focusWindow && surface == m_focusSurface)
+-        return;
+-
+     if (!pWindow || !pWindow->priorityFocus()) {
+         if (g_pSessionLockManager->isSessionLocked()) {
+             Log::logger->log(Log::DEBUG, "Refusing a keyboard focus to a window because of a sessionlock");

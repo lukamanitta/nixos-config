@@ -22,6 +22,7 @@ actually happened on this machine, with the cause and the fix that worked.
 | `/boot` fills up | [ESP size](#esp-size) |
 | Rebuild seems to ignore a kernel parameter | [Kernel params need a reboot](#kernel-params-need-a-reboot) |
 | HDMI monitor blanks and flashes its input overlay | [ARZOPA HDMI signal drops](#arzopa-hdmi-signal-drops) |
+| Keyboard stops working after closing a LiquoRice surface | [Keyboard dead after the pill closes](#keyboard-dead-after-the-pill-closes) |
 
 ## Disk and partition work
 
@@ -209,6 +210,30 @@ is specific to this panel, so remove it if the display is replaced.
 **Open:** the 3 m JSAUX mini-HDMI→HDMI cable has only the owner's Windows
 recollection as evidence that it can carry 144 Hz, so a shorter certified
 cable may still allow a higher rate.
+
+## Input
+
+### Keyboard dead after the pill closes
+
+**Symptom:** open a LiquoRice pill surface (launcher, media, keyboard nav),
+dismiss it with Escape, and the previously focused window stops receiving
+keystrokes. `hyprctl activewindow` still reports that window, mouse input still
+works, and moving/closing another window restores typing.
+
+**Cause:** Hyprland 0.55.4 releases the layer surface's keyboard interactivity
+(confirmed in a `WAYLAND_DEBUG=1 quickshell` log) but keeps the seat's keyboard
+focus on the surface: `CFocusState::rawWindowFocus` early-returns when the
+window is unchanged, so the refocus after `set_keyboard_interactivity(0)` is a
+no-op. Upstream fixed it in 0.56.0
+([PR #14953](https://github.com/hyprwm/Hyprland/pull/14953); see issues #8293
+and discussion #14285). `input:follow_mouse = 1` hides the symptom and is not
+the fix.
+
+**Fix:** `modules/hosts/features/patches/hyprland-focus-restore.patch`, applied
+by the overlay in `modules/hosts/features/hyprland.nix`. Remove both once
+nixpkgs ships Hyprland 0.56.0 or newer. The running compositor is the old
+binary, so the fix takes effect after logging out and back in, not on
+`nixos-rebuild switch` alone.
 
 ## it87 and the IT8696
 
