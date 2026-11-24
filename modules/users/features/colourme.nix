@@ -40,6 +40,10 @@ in
   };
 
   config = {
+    # Live scheme switching: `colourme <scheme>` from any shell. It reads
+    # ~/.config/colourme (the symlink below) and writes the runtime seams.
+    home.packages = [ colourme ];
+
     xdg.configFile."colourme".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nixos-config/configs/colourme";
 

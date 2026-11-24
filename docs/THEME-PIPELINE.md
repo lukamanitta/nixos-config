@@ -206,14 +206,15 @@ hermetically from the same templates, then copy them in only if missing.
 
 Because the default is rendered fresh on every rebuild from the pinned
 templates, it cannot drift — there are no committed generated files to keep in
-sync. The only committed "default" is Quickshell's `colours.default.json`
-fallback (hand-written, small).
+sync. The Quickshell fallback lives in `Colours.qml` as the `JsonAdapter`
+defaults (small, hand-written).
 
-### Not installed on the system
+### Installed as a package
 
-The packaged `colourme` is a **build input only** (for the defaults
-derivation); it is not in `home.packages`. For live switching you run the clone
-(`~/projects/code/colourme`); a Nix-provided wrapper can come later.
+The packaged `colourme` is in `home.packages`, so `colourme <scheme>` works from
+any shell. It reads `~/.config/colourme` (the out-of-store symlink to
+`configs/colourme`), so schemes and templates stay editable live, and it writes
+all of the runtime seams directly — no wrapper needed.
 
 ## Sequencing
 
@@ -231,5 +232,3 @@ derivation); it is not in `home.packages`. For live switching you run the clone
 - Whether `colourme` should also touch the *live* default when
   `defaultScheme` changes in Nix, or strictly seed-if-absent (current plan:
   seed-if-absent, never clobber).
-- Whether to add a thin `theme` wrapper (`colourme <scheme>` + PATH) once
-  colourme is packaged.
