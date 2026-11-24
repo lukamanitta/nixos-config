@@ -69,7 +69,7 @@
   services.blueman.enable = true;
 
   # Windows is on a separate ESP; systemd-boot needs the EDK2 shell handle.
-  # Run `map -c` in the EDK2 shell and replace FS1 with the Windows ESP.
+  # Find it with `map -r` in the EDK2 shell (currently FS0, found 2026-11-24).
   boot.loader.systemd-boot.edk2-uefi-shell.enable = true;
   boot.loader.systemd-boot.windows."Windows" = {
     title = "Windows";

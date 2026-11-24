@@ -204,12 +204,18 @@ Endgame, gated by the parity checklist below. Plan and runbook:
 - [x] Back up `/home` with restic and verify the snapshot
       (`12d1374a`, 36.5 GiB; `restic check --read-data-subset=1%` and a test
       restore passed).
-- [ ] Clean up Arch caches/build trees and shrink btrfs for a 1 GiB NixOS ESP +
-      LUKS/btrfs root.
-- [ ] Install the dual-boot NixOS system; add the Windows EDK2 handle.
+- [x] Clean up Arch caches/build trees and shrink btrfs for a 1 GiB NixOS ESP +
+      LUKS/btrfs root. (Done 2026-11-24; the WD disk also had to move MBR → GPT
+      to fit five partitions — see D45 and WORKSTATION.md.)
+- [x] Install the dual-boot NixOS system; add the Windows EDK2 handle (`FS0`).
+- [x] IT8696 fan control: `acpi_enforce_resources=lax` plus the out-of-tree
+      `it87` module (D47).
+- [ ] Fix `gh` being unable to write its own config (D48) — applied; verify on a
+      fresh checkout.
 - [ ] Validate Affinity, OBS, Spotify/Slack/Discord, OpenRGB, CoolerControl,
       gdrive mount, Tailscale, MSI stack.
-- [ ] One full NixOS workday; then wipe Arch and take the whole disk.
+- [ ] One full NixOS workday; then remove Arch and take the whole disk
+      ([WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md), D49).
 - [ ] Secure Boot (lanzaboote + custom keys) after Arch is gone.
 - [ ] Revisit Resolve on RDNA4 once ROCm/OpenCL is known-good.
 
@@ -233,7 +239,8 @@ Endgame, gated by the parity checklist below. Plan and runbook:
 - [ ] Backups verified
 - [ ] MSI work environment at parity (see `msi-nix/docs/ROADMAP.md`)
 - [ ] Data migration plan
-- [ ] Documented rollback (keep Arch install / snapshots)
+- [x] Documented rollback — boot Arch via rEFInd from the firmware menu (F12);
+      see WORKSTATION.md "Boot" and WORKSTATION-TROUBLESHOOTING.md.
 
 ---
 

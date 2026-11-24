@@ -489,8 +489,8 @@ its config remains so re-enabling is one line (`idle = lib.mkDefault
 The workstation is a Ryzen 9800X3D + RX 9070 XT on a Gigabyte B850M. It gets its
 own host entry and a **separate 1 GiB ESP + systemd-boot** while Arch keeps its
 512 MiB ESP/rEFInd as the fallback. Windows lives on its own ESP on the second
-NVMe; systemd-boot reaches it through the EDK2 shell handle (`map -c`), with the
-firmware menu as the fallback until that handle is set. After a full NixOS
+NVMe; systemd-boot reaches it through the EDK2 shell handle (`map -r`; `FS0` as
+of 2026-11-24), with the firmware menu as the fallback. After a full NixOS
 workday, Arch is wiped and NixOS takes the whole disk. See
 [WORKSTATION.md](./WORKSTATION.md).
 
@@ -525,4 +525,57 @@ copies selected paths to `~/GoogleDrive-offline` for guaranteed offline access.
 The OAuth config stays in `~/.config/rclone/rclone.conf`. Backups use restic to
 `rclone:gdrive:backups/luka-workstation`, with the password outside git; browser
 profiles are mostly skipped because Mozilla sync covers them.
+
+### D45 — The WD disk moved from MBR to GPT during the install (settled)
+Arch shipped on an `msdos` label with three primaries. MBR allows four primary
+partitions and the dual-boot needs five (Arch ESP, swap, Arch root, NixOS ESP,
+NixOS root), so the disk was converted with `sgdisk -g` after the btrfs shrink
+freed space at the end. Two things made it safe: `parted` refuses to shrink in
+`-s` mode (it prints the data-loss warning and answers no), so the shrink is
+done interactively; and the partition end is computed from
+`btrfs inspect-internal dump-super` in sectors, rounded up, rather than as
+`old_end - 120GiB`, which on this disk was 688 sectors short and would have
+truncated the filesystem. GPT regeneration changed every partition GUID;
+Arch's `fstab` and kernel cmdline use filesystem `UUID=`, so it still boots, and
+its rEFInd NVRAM entry was recreated with `efibootmgr`. The disk is now fully
+allocated, with no free space after p5.
+
+### D46 — `@ssh` is folded into `@home` on NixOS (settled)
+Arch keeps `~/.ssh` in its own subvolume and NixOS deliberately does not. No
+snapshot or scrub service is configured on NixOS, so a separate subvolume buys
+nothing today and costs a mount entry and a restore footgun. The keys were
+copied into `@home/luka/.ssh` (0700, uid 1000). If snapper is ever introduced
+for `/home`, split `@ssh` out **before the first snapshot** — a snapshot taken
+with the keys inside keeps them forever, including after rotation.
+
+### D47 — The IT8696 needs the out-of-tree `it87` module (settled)
+Mainline `it87` does not recognise the IT8696E, so `boot.kernelModules = [
+"it87" ]` alone fails with "No such device" even with
+`acpi_enforce_resources=lax` (which Gigabyte firmware also requires, and which
+Arch's cmdline already had). Nixpkgs ships Frank Crawford's driver as
+`config.boot.kernelPackages.it87`; it goes in `boot.extraModulePackages`. Both
+trees carry `hwmon/it87.ko`, so a rebuild may need
+`system.modulesTree = lib.mkForce [ … ignoreCollisions = true … ]` with the
+extra package listed first. CoolerControl depends on this for any fan control.
+
+### D48 — `gh` owns `~/.config/gh/config.yml` (settled)
+home-manager's `programs.gh` always materialises `config.yml` as a read-only
+store symlink, which makes `gh auth login` fail with `read-only file system`.
+The module's `xdg.configFile."gh/config.yml".enable = false` override is set so
+`gh` can write its own preferences. `hosts.yml` (the token) stays unmanaged
+because `programs.gh.hosts` is left empty. Authentication is stored as a 0600
+file inside the LUKS-encrypted home (`--insecure-storage` if a keyring blocks
+the login).
+
+### D49 — Arch is removed by a clean re-layout, not an in-place grow (settled)
+NixOS occupies the last partition, and its LUKS2 header sits at that
+partition's front, so deleting Arch frees space that cannot extend the NixOS
+root. The plan is therefore: verified backup, rescue the restic password and
+rclone config off-disk, wipe the WD disk, create a 1 GiB ESP plus one LUKS2
+partition filling the disk, reinstall from the flake, and restore `/home`. The
+in-place alternative (`btrfs device add` into the freed space with a second LUKS
+device) is documented as a fallback only: two unlock prompts, a root filesystem
+split across two partitions on one disk, and no advantage over a reinstall.
+Gated on a full NixOS workday. See
+[WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md).
 

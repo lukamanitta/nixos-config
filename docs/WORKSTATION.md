@@ -4,256 +4,175 @@ The personal desktop: Ryzen 7 9800X3D, Radeon RX 9070 XT + Radeon 610M iGPU,
 Gigabyte B850M GAMING X WIFI6E, 30 GiB RAM, RTL8852CE Wi-Fi/Bluetooth,
 RTL8125 Ethernet, IT8696 fan controller.
 
-Current stage: **dual-boot trial**. Arch stays on `nvme0n1` until NixOS has
-passed a full workday and the creative stack is proven; then `nvme0n1` is wiped
-and NixOS takes the whole disk. Windows stays on `nvme1n1` throughout.
+**Status: installed 2026-11-24, running a dual-boot trial.** NixOS owns a new
+1 GiB ESP + a LUKS2/btrfs partition on the WD NVMe; Arch is still intact
+alongside it as the fallback; Windows is untouched on the Samsung.
 
-## Layout
+Companion docs:
 
-- `modules/hosts/luka-workstation/` — host entry, hardware (`hardware.nix`),
-  generated filesystems (`hardware-configuration.nix`, a placeholder until the
-  install), OpenRGB/CoolerControl seed files.
-- `modules/hosts/features/creative.nix` — Affinity, DaVinci, Discord, Slack,
-  Spotify, VLC, OBS; the narrow unfree allow-list and the Affinity overlay.
-- `modules/users/features/gdrive.nix` — rclone Drive mount and `gdrive-pin`.
-- `modules/users/features/openrgb.nix` — user OpenRGB SDK server; the NixOS
-  module still supplies udev/i2c/the package, but its root service is disabled.
-- `scripts/arch-cleanup.sh`, `scripts/pre-nixos-backup.sh` — run before the
-  disk is touched.
+- [WORKSTATION-TROUBLESHOOTING.md](./WORKSTATION-TROUBLESHOOTING.md) — every
+  failure this install produced, with causes and fixes. Read this before
+  changing the disk layout, boot entries, `it87`, or `gh`.
+- [WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md) — how to end up
+  with NixOS only on the WD drive, including what must be rescued from Arch
+  first.
+- [HANDOFF.md](./HANDOFF.md) — the current state in one page.
 
-## Decisions
+## Disks (verified 2026-11-24, after the install)
 
-- **Dual boot, separate ESP.** Arch keeps its 512 MiB ESP + rEFInd. NixOS gets
-  a new 1 GiB FAT32 ESP (`NIXBOOT`) and systemd-boot. Windows is on its own ESP
-  on `nvme1n1`; systemd-boot reaches it through the EDK2 shell handle
-  (`efiDeviceHandle`, currently the placeholder `FS1` — find the real value
-  with `map -c` in the EDK2 shell and update the host).
-- **LUKS2 + btrfs.** LUKS2 passphrase on the NixOS partition; btrfs subvolumes
-  `@`, `@home`, `@nix` with zstd; the existing 4 GiB swap partition is reused.
-  Secure Boot is deliberately deferred until after Arch is removed (lanzaboote
-  + custom keys then).
-- **Native apps, no Flatpak.** Slack, Spotify, Discord, VLC, Ghostty, OBS,
-  DaVinci and Zen all have native packages/flakes. Affinity comes from
-  `mrshmllow/affinity-nix` (Wine prefix built in Nix, unfree, vendor installer,
-  binary cache). Flatpak only if something is genuinely unpackaged later.
-- **DaVinci is opt-in and a known risk.** nixpkgs 26.05 ships ROCm 7.2.3,
-  which is the version that breaks Resolve on RDNA4 (nixpkgs issue #481483).
-  Keep Arch or Windows available for Resolve until the GPU/OpenCL stack is
-  proven; do not block the NixOS switch on it. The package is disabled by
-  default (`my.creative.davinciResolve = true` to install it) because the
-  nixpkgs 20.3.2 source fetch currently fails before the build starts.
-- **OpenRGB/CoolerControl.** OpenRGB runs as the user (the system module still
-  provides udev/i2c and disables its root service); the server owns `true-white`
-  and reads the profiles from `~/.config/OpenRGB`. The CoolerControl
-  `config.toml`/`overrides.toml` are seeded from
-  `modules/hosts/luka-workstation/files/`. CoolerControl comes from
-  `Daaboulex/coolercontrol-nix` (5.1.2; nixpkgs is on 4.3.0). RAM detection is
-  known to be inconsistent and is deliberately not retried yet; `colourme`’s
-  `openrgb -c ...` hook keeps working against the local server.
-- **Google Drive.** `rclone mount` with a full VFS cache (currently 30 GiB,
-  configurable under `my.gdrive`), not the old cache-less mount. `gdrive-pin`
-  copies selected paths to `~/GoogleDrive-offline` for guaranteed offline use.
-  The OAuth config stays in `~/.config/rclone/rclone.conf`, copied manually.
-- **Backups.** restic to `rclone:gdrive:backups/luka-workstation`, password at
-  `~/.config/restic/luka-workstation.pass` (never committed). Browser profiles
-  are mostly skipped; Mozilla sync covers them.
+Device names have already swapped once on this machine, and the kernel's
+major:minor numbers do not follow the names either (`blkid` reported the WD
+disk as `259:0` while it was `/dev/nvme1n1`). **Always address a disk through
+`/dev/disk/by-id/`.**
 
-## Validation (2026-11-23)
+| Role | Device | Size | Model | Serial |
+|---|---|---|---|---|
+| Arch + NixOS | `nvme1n1` | 476.94 GiB, 1000215216 sectors | WDC PC SN720 SDAPNTW-512G-1006 | `190350802260` |
+| Windows | `nvme0n1` | 3.6 TB | Samsung SSD 990 EVO Plus 4TB | `S7U9NJ0Y515764R` |
+| Ventoy USB | `sda` | 114.6 GB | SanDisk 3.2Gen1 | `03005420082825095350` |
 
-Built on the Arch workstation, not installed yet:
-
-- `nix flake check --no-build`: passes for `luka-nixos-test` and
-  `luka-workstation`.
-- Home Manager generation for `luka-workstation`: builds.
-- Full `luka-workstation` system: builds; closure ≈ 19.4 GiB.
-- `affinity-v3`: builds; ≈ 6.2 GiB including the Wine/prefix closure.
-- `coolercontrold` 5.1.2, Slack, Discord, Spotify, OBS: build.
-- DaVinci Resolve: source fetch fails (vendor server); opt-in and unverified.
-- OpenRGB, CoolerControl, gdrive, Tailscale, MSI systemd units: configured,
-  not yet exercised on the real hardware.
-
-Backup and snapshots:
-
-- restic snapshots `12d1374a` (full) and `d313a1ef` (incremental, 44 s; 57 new,
-  42 changed, 134,954 unchanged) in
-  `rclone:gdrive:backups/luka-workstation`; password in
-  `~/.config/restic/luka-workstation.pass`.
-- `restic check --read-data-subset=1%`: no errors.
-- Restored `nixos-config/flake.nix` from the snapshot and compared it: match.
-- Snapper keeps `1`, `1157`, `2533`, `2535`, `3124`–`3127` and
-  `3128 Pre NixOS install`; all older timeline/package snapshots are deleted.
-- `/home` has ~187 GiB free. The paru cache and DaVinci AUR build tree are
-  intentionally retained for now.
-
-## Install runbook (when ready)
-
-> **Device names can swap between boots.** The Arch disk is the ~477 GiB WD
-> (`nvme1n1` at the time of writing); Windows is the 3.6 TB Samsung
-> (`nvme0n1`); the Ventoy USB is `sda` (114.6 GB SanDisk). Always identify by
-> `SIZE`/`MODEL`/`PARTUUID`, never by the `nvmeXn1` name alone.
-
-### 1. Preflight
-
-- ISO: `~/Downloads/nixos-minimal-26.05.11045.774debe7a0d1-x86_64-linux.iso`
-  (SHA-256 `81fdbaa462f15a2eb36b4c6a9e3b8d3430b847d9bf63dda36cb8456632a4403b`,
-  matches the release). It is already on the Ventoy USB (`sda`, exFAT) and
-  verified there; boot the **minimal 26.05** entry in UEFI mode, not the
-  25.11 graphical one. For a non-Ventoy USB, use
-  `dd if=... of=/dev/sdX bs=4M status=progress oflag=sync` after verifying the
-  target with `lsblk`.
-- Windows: disable Fast Startup (and note any BitLocker recovery key) even
-  though the Windows disk is not being repartitioned.
-- Backup is current (latest `d313a1ef`); re-run
-  `nix shell nixpkgs#restic nixpkgs#rclone -c ./scripts/pre-nixos-backup.sh`
-  after any last-minute changes.
-- Snapper already has `3128 Pre NixOS install`; create a new one if files
-  change after it.
-
-### 2. Boot the ISO and identify the disks
-
-The commands below assume a root shell on the installer:
+Stable path for the WD disk:
 
 ```sh
-sudo -i
-lsblk -o NAME,SIZE,MODEL,FSTYPE,LABEL,PARTUUID,MOUNTPOINTS
+ARCH_DISK=/dev/disk/by-id/nvme-WDC_PC_SN720_SDAPNTW-512G-1006_190350802260
 ```
 
-Set `ARCH_DISK` to the ~477 GiB disk and `WINDOWS_DISK` to the 3.6 TB disk.
-Do not touch `WINDOWS_DISK`.
+### WD NVMe layout — **GPT** since 2026-11-24
+
+The disk was MBR (`msdos`, disk id `0x66e96915`) when Arch was installed. It was
+converted to GPT during the NixOS install because MBR allows only four primary
+partitions and the plan needs five. See
+[WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md) and
+[DECISIONS.md](./DECISIONS.md) D45 for why, and the troubleshooting doc for the
+`sgdisk` failure that conversion causes if the last partition still reaches the
+end of the disk.
+
+| # | Sectors | Size | FS / name | Notes |
+|---|---|---|---|---|
+| p1 | 2048–1050623 | 512 MiB | vfat, Arch ESP, fs UUID `9369-6B68` | rEFInd (`EFI/refind/refind_x64.efi`), a stale `EFI/systemd/systemd-bootx64.efi`, UKIs in `EFI/Linux/`, `EFI/BOOT/BOOTX64.EFI`. ~302 MiB used. **Arch's fallback — not NixOS's.** |
+| p2 | 1050624–9439231 | 4 GiB | swap, UUID `2e4e9d1b-e843-42be-8340-32eff0b609e5` | Arch's swap, **reused by NixOS** (`swapDevices`). Unencrypted. |
+| p3 | 9439232–748562431 | 352.44 GiB | btrfs, fs UUID `7331adf4-2345-4553-8570-b2ce1fa35729` | Arch root. Subvolumes `@`, `@var`, `@opt`, `@home`, `@ssh`, `@snapshots`, `@home-snapshots` (+ nested `@var/lib/{machines,portables}`, `@snapshots/<n>/snapshot`). **The only copy of Arch.** |
+| p4 | 748562432–750659583 | 1 GiB | vfat label `NIXBOOT`, PARTUUID `ec04e73a-e98c-4087-b20b-0d4276580eb8`, fs UUID `261B-9CAD` | NixOS ESP, systemd-boot. |
+| p5 | 750659584–1000215215 | ~119 GiB | LUKS2 label `NIXROOT`, UUID `b6191a65-7b50-4a79-8865-89dc8d7b7332` → mapper `nixos` → btrfs label `nixos` | NixOS root. Subvolumes `@`, `@home`, `@nix`. |
+
+The disk is fully allocated: no free space remains after p5. Growing NixOS
+therefore means deleting Arch (see the removal doc) — p5's LUKS header sits at
+its front, so it cannot grow backwards into freed space.
+
+### Windows NVMe (never modify)
+
+`nvme0n1`, GPT: p1 100 MiB ESP (partition GUID
+`4427216c-77f0-4027-884d-1e394b40e929`), p2 16 MiB MSR, p3 3.6 TB NTFS, p4
+819 MiB NTFS recovery. Plain NTFS, no BitLocker, Fast Startup off. Firmware
+entry `Windows Boot Manager` (`Boot0000`).
+
+## Boot
+
+- NixOS boots from p4 via systemd-boot. Its NVRAM entry is labelled
+  **`Linux Boot Manager`**, not "NixOS" — that is `bootctl`'s own label.
+- Arch boots via rEFInd on p1. rEFInd is a separate EFI application, so it
+  appears in the **firmware boot menu** (F12), never in systemd-boot's menu.
+  There are two redundant `rEFInd` NVRAM entries: `Boot0001`, which predates the
+  MBR→GPT conversion, and `Boot0002`, recreated with `efibootmgr` immediately
+  afterwards. Both load the same binary; keep one and delete the other when
+  tidying firmware entries.
+- Windows is chainloaded by systemd-boot through the EDK2 shell handle in
+  `boot.loader.systemd-boot.windows."Windows".efiDeviceHandle`, currently
+  **`FS0`** (found with `map -r` in the shell). systemd-boot cannot read another
+  ESP, which is why this indirection exists.
+- `boot.loader.systemd-boot.edk2-uefi-shell.enable = true` provides the shell
+  entry used for `map -r`, for reaching Windows' ESP, and as the escape hatch
+  into Arch: from the shell, `FSx:\EFI\refind\refind_x64.efi`.
+- `boot.loader.systemd-boot.configurationLimit = 10` on a 1 GiB ESP. Watch
+  `df -h /boot`; each generation costs roughly 50–60 MiB.
+
+## Filesystem/encryption decisions as installed
+
+- LUKS2, passphrase, **US keyboard layout at the initrd prompt**, no recovery
+  keyslot yet. Adding a keyslot later is cheap; losing the passphrase is not.
+- btrfs `@`, `@home`, `@nix` with `compress=zstd`; `/nix` also `noatime`.
+- `hardware-configuration.nix` was generated by `nixos-generate-config` on the
+  installed system. It names the LUKS device `nixos` (from the mapper name) and
+  references it as `/dev/disk/by-uuid/b6191a65-…`. It does **not** set
+  `allowDiscards`.
+- Swap is Arch's plain p2. No hibernation.
+- `time.hardwareClockInLocalTime = true` for the Windows dual boot.
+
+## Repo map (host-specific)
+
+- `modules/hosts/luka-workstation/default.nix` — hostname, MSI, Tailscale,
+  OpenRGB (root service disabled), CoolerControl, Bluetooth, boot loaders,
+  Windows handle, RTC-in-local-time, Affinity substituter, Home Manager wiring.
+- `modules/hosts/luka-workstation/hardware.nix` — CPU/GPU/i2c/microcode/
+  redistributable firmware, `it87`, and `acpi_enforce_resources=lax`.
+- `modules/hosts/luka-workstation/hardware-configuration.nix` — **generated**;
+  commit changes to it deliberately, never hand-invent device paths.
+- `modules/hosts/luka-workstation/files/{openrgb,coolercontrol}/` — seeds, not
+  live state.
+- `modules/users/features/gh.nix` — `programs.gh` with `gitCredentialHelper`,
+  plus the `xdg.configFile."gh/config.yml".enable = false` override.
+- `modules/users/features/creative.nix` — Affinity, DaVinci (opt-in), Discord,
+  Slack, Spotify, VLC, OBS.
+- `modules/users/features/gdrive.nix`, `.../openrgb.nix` — per-user features.
+
+## Day-2 commands
 
 ```sh
-ARCH_DISK=/dev/nvme1n1   # VERIFY: 476.9G WD, btrfs @ + swap + vfat
-WINDOWS_DISK=/dev/nvme0n1 # 3.6T Samsung; do not modify
+sudo nixos-rebuild switch --flake ~/nixos-config#luka-workstation   # apply
+sudo nixos-rebuild boot  --flake ~/nixos-config#luka-workstation    # kernel params
+sudo nix-collect-garbage -d                                          # after pruning
 ```
 
-### 3. Shrink Arch and create the NixOS partitions
+Kernel-parameter and initrd changes need `switch` **and** a reboot; `switch`
+alone leaves the running kernel as it was.
 
-Shrink the btrfs filesystem first (the ISO is not running Arch, so this is
-safe):
+State that is not in the store and must be recreated by hand after a reinstall:
+`tailscale up`, `~/.config/rclone/rclone.conf`, `gh auth login`, the
+CoolerControl admin password, and any `~/.ssh` keys (they live in `@home` on
+NixOS — the Arch `@ssh` subvolume was deliberately **not** carried over as a
+separate subvolume).
+
+## Working on the flake from the Mac
+
+`flake.nix` pins `msi-nix` to the absolute input
+`git+file:///home/luka/code/msi-nix`, which does not exist on macOS. Any flake
+evaluation there fails until it is overridden:
 
 ```sh
-mkdir -p /mnt/arch
-mount -o subvolid=5 "${ARCH_DISK}p3" /mnt/arch
-btrfs filesystem usage /mnt/arch
-btrfs filesystem resize -120G /mnt/arch
-btrfs filesystem usage /mnt/arch
-umount /mnt/arch
+git clone <msi-nix remote> ~/code/msi-nix
+nix flake check --override-input msi-nix path:~/code/msi-nix
 ```
 
-Then shrink the partition and add a 1 GiB ESP + the rest as the LUKS root.
-The arithmetic below works in MiB and assumes the existing Arch partitions are
-1–3; confirm with `parted -s "$ARCH_DISK" unit MiB print` first.
+Do not "fix" this by changing the input to a relative path without deciding
+where `msi-nix` is meant to live for every host.
 
-```sh
-read -r START END < <(
-  parted -m -s "$ARCH_DISK" unit MiB print |
-    awk -F: '$1==3 {printf "%.0f %.0f\n", $2, $3}'
-)
-NEWEND=$((END - 120*1024))          # shrink partition by 120 GiB
-echo "p3: $START..$END MiB -> $NEWEND MiB"
-parted -s "$ARCH_DISK" unit MiB resizepart 3 "${NEWEND}MiB"
-parted -s "$ARCH_DISK" unit MiB mkpart NIXBOOT fat32 "${NEWEND}MiB" "$((NEWEND+1024))MiB"
-parted -s "$ARCH_DISK" set 4 esp on
-parted -s "$ARCH_DISK" unit MiB mkpart NIXROOT "$((NEWEND+1024))MiB" 100%
-partprobe "$ARCH_DISK"
-lsblk -o NAME,SIZE,FSTYPE,LABEL,PARTUUID "$ARCH_DISK"
-```
+## Post-install state (2026-11-24)
 
-If the numbering is not 1–3, replace `3` in the `parted` commands and the
-`4` in `set 4 esp on` with the actual Arch root and new ESP numbers.
+Done and verified:
 
-Create the filesystems:
+- Install, first boot, LUKS unlock, btrfs subvolumes, swap.
+- systemd-boot on its own ESP; `Linux Boot Manager` NVRAM entry.
+- Windows handle `FS0` found through the EDK2 shell and committed.
+- `it87` now loads against the IT8696 via the out-of-tree module, so
+  CoolerControl can read the Super I/O.
+- `gh` can write its own `config.yml`; authentication works.
 
-```sh
-mkfs.fat -F 32 -n NIXBOOT "${ARCH_DISK}p4"
-cryptsetup luksFormat --type luks2 --label NIXROOT "${ARCH_DISK}p5"
-cryptsetup open "${ARCH_DISK}p5" nixos
-mkfs.btrfs -L nixos /dev/mapper/nixos
+Not yet verified — do these before declaring the trial passed:
 
-mount /dev/mapper/nixos /mnt
-btrfs subvolume create /mnt/@ /mnt/@home /mnt/@nix
-umount /mnt
-
-mount -o subvol=@,compress=zstd /dev/mapper/nixos /mnt
-mkdir -p /mnt/home /mnt/nix /mnt/boot
-mount -o subvol=@home,compress=zstd /dev/mapper/nixos /mnt/home
-mount -o subvol=@nix,compress=zstd,noatime /dev/mapper/nixos /mnt/nix
-mount "${ARCH_DISK}p4" /mnt/boot
-swapon "${ARCH_DISK}p2"   # reuse Arch's 4 GiB swap
-```
-
-### 4. Copy the config and generate hardware files
-
-```sh
-# Copy the repo + the MSI overlay from the Arch @home subvolume.
-mkdir -p /mnt/arch
-mount -o ro,subvol=@home "${ARCH_DISK}p3" /mnt/arch
-mkdir -p /mnt/home/luka /mnt/home/luka/code /home/luka/code
-cp -a /mnt/arch/luka/nixos-config /mnt/home/luka/
-cp -a /mnt/arch/luka/code/msi-nix /mnt/home/luka/code/
-cp -a /mnt/arch/luka/code/msi-nix /home/luka/code/   # flake input path during install
-umount /mnt/arch
-
-nixos-generate-config --root /mnt
-cp /mnt/etc/nixos/hardware-configuration.nix \
-   /mnt/home/luka/nixos-config/modules/hosts/luka-workstation/hardware-configuration.nix
-```
-
-The generated file must contain the new LUKS device and the `/`, `/home`,
-`/nix` and `/boot` mounts. Check it before installing.
-
-### 5. Install
-
-```sh
-nixos-install --flake /mnt/home/luka/nixos-config#luka-workstation \
-  --option extra-substituters https://cache.forall.systems \
-  --option extra-trusted-public-keys 'cache.forall.systems:5PmD7QO4MSF8YgyRZtkSGXRDo96H3bybIf2SsQh8ScI='
-```
-
-The MSI overlay must be at `/home/luka/code/msi-nix` in the **ISO** environment
-for the flake input to evaluate; the copy above handles that. The installed
-system gets `/mnt/home/luka/code/msi-nix`; clone/copy the rest of `~/code/msi`
-after first boot.
-
-### 6. First boot and Windows entry
-
-- Log in as `luka` (the configured password) or use root to reset it.
-- Open the EDK2 shell entry, run `map -c`, and find the Windows ESP
-  (`ls FSx:\EFI\Microsoft\Boot\bootmgfw.efi`).
-- Set `boot.loader.systemd-boot.windows."Windows".efiDeviceHandle` in
-  `modules/hosts/luka-workstation/default.nix`, then
-  `sudo nixos-rebuild switch --flake ~/nixos-config#luka-workstation`.
-- Until the handle is set, use the firmware boot menu for Windows.
-
-### 7. Post-install
-
-## Post-install checks
-
-- `tailscale up` (auth is manual; state is not in the store).
-- Copy `~/.config/rclone/rclone.conf` from the old machine, then
-  `systemctl --user start rclone-gdrive`; check `~/mnt/gdrive`.
-- Affinity: `affinity-v3` first launch builds/copies its prefix; test a file
-  and the plugin loader. Keep the old Arch AppImage prefix until this works.
-- OBS: PipeWire screen capture + audio; no virtual camera/plugins yet.
-- OpenRGB: check that the two ENE DRAM controllers and the IT5711 are present;
-  the RAM inconsistency is expected to be investigated after the switch.
-- CoolerControl: the seeded `All Case Fans` profile should apply on boot
-  (fan1/fan2; fan3/fan5 default); GUI remains the tuning surface.
-- DaVinci: try `davinci-resolve` and check Preferences → Memory/GPU; if RDNA4
-  OpenCL still fails, use the Arch/Windows fallback. Revisit ROCm pinning later.
-- Secure Boot: deferred; plan is lanzaboote with custom keys after Arch is gone.
-
-## Known risks / open items
-
-- Resolve on RDNA4 with ROCm 7.2.x (see above). The nixpkgs 20.3.2 source
-  fetch failed on 2026-11-23 (vendor server 503/URL rejection), so the package
-  is not built yet; retry before concluding anything about ROCm.
-- Affinity on Wine is best-effort; sign-in/WebView2 pages may not work. Its
-  first Nix build is large (Wine + prefix + winetricks); use the
-  `cache.forall.systems` substituter configured in the host.
-- OpenRGB RAM detection is inconsistent; no retry service yet by choice.
-- The 1 GiB NixOS ESP holds systemd-boot + kernels; keep
-  `configurationLimit` modest (currently 10).
-- The Windows `efiDeviceHandle` is a placeholder until `map -c` is run.
-- The CoolerControl seed is 5.0.1-shaped; the flake ships 5.1.2. It should
-  migrate, but review `/var/lib/coolercontrol/config.toml` after first boot.
+- [ ] Arch still boots via rEFInd from the firmware menu (the GPT conversion
+      changed partition GUIDs; prove the fallback before trusting it).
+- [ ] Windows entry actually boots Windows from the systemd-boot menu.
+- [ ] Affinity `affinity-v3` launches and opens a document.
+- [ ] OBS: PipeWire screen capture + audio.
+- [ ] OpenRGB: `true-white` loads; two ENE DRAM controllers + IT5711 visible
+      (RAM detection is known-flaky and deliberately not chased).
+- [ ] CoolerControl: seeded `All Case Fans` (fan1/fan2) applies; the seed is
+      5.0.1-shaped against a 5.1.2 daemon, so review
+      `/var/lib/coolercontrol/config.toml`.
+- [ ] `rclone-gdrive` mount at `~/mnt/gdrive`, and `gdrive-pin`.
+- [ ] `tailscale up` and a Tailscale SSH/ping from another node.
+- [ ] Wi-Fi (RTL8852CE) and Bluetooth pairing — both untested on NixOS.
+- [ ] Monitor layout: `DP-2` at `0x0` and `HDMI-A-2` at `0x1080`, both preferred.
+- [ ] DaVinci Resolve: still opt-in (`my.creative.davinciResolve = true`) and
+      still unproven on RDNA4 + ROCm 7.2.x.
+- [ ] A full workday on NixOS, then plan Arch removal.
