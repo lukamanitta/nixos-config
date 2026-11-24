@@ -22,6 +22,7 @@ actually happened on this machine, with the cause and the fix that worked.
 | `/boot` fills up | [ESP size](#esp-size) |
 | Rebuild seems to ignore a kernel parameter | [Kernel params need a reboot](#kernel-params-need-a-reboot) |
 | HDMI monitor blanks and flashes its input overlay | [ARZOPA HDMI signal drops](#arzopa-hdmi-signal-drops) |
+| `hyprctl keyword` is ignored / `hyprctl dispatch exit` errors | [Hyprland config is Lua, not ini](#hyprland-config-is-lua-not-ini) |
 | Keyboard stops working after closing a LiquoRice surface | [Keyboard dead after the pill closes](#keyboard-dead-after-the-pill-closes) |
 
 ## Disk and partition work
@@ -210,6 +211,25 @@ is specific to this panel, so remove it if the display is replaced.
 **Open:** the 3 m JSAUX mini-HDMI→HDMI cable has only the owner's Windows
 recollection as evidence that it can carry 144 Hz, so a shorter certified
 cable may still allow a higher rate.
+
+## Hyprland
+
+### Config is Lua, not ini
+
+`modules/users/features/hyprland/default.nix` sets `configType = "lua"`, so the
+arguments you give `hyprctl` are evaluated as Lua:
+
+- `hyprctl keyword input:follow_mouse 1` prints `keyword can't work with
+  non-legacy parsers. Use eval.` Use
+  `hyprctl eval 'hl.config({ input = { follow_mouse = 1 } })'` instead, then
+  `hyprctl reload` when the change needs a config pass.
+- `hyprctl dispatch exit` prints `hl.dispatch: expected a dispatcher (e.g.
+  hl.dsp.window.close())`. Dispatchers are Lua expressions, so log out with
+  `hyprctl dispatch 'hl.dsp.exit()'` — or `loginctl terminate-session
+  "$XDG_SESSION_ID"`, or the Logout tile in the pill's power surface.
+- The generated config is `~/.config/hypr/hyprland.lua`, written by the Nix
+  modules as `hl.bind` / `hl.monitor` / `hl.workspace_rule` / `hl.window_rule`
+  calls.
 
 ## Input
 

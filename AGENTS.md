@@ -29,3 +29,23 @@ hostname
 Arch still exists on the workstation's WD disk during the trial and is booted
 from the firmware menu (rEFInd). Treat Arch's dotfiles under `~/dotfiles` and
 its live `~/.config` as a different system: evidence for Arch, not for NixOS.
+
+## Hyprland is Lua-configured
+
+`modules/users/features/hyprland/default.nix` sets `configType = "lua"`, so the
+live config (`~/.config/hypr/hyprland.lua`) and every runtime command use the
+Lua API, not the legacy ini syntax. Two traps:
+
+- `hyprctl keyword …` fails with `keyword can't work with non-legacy parsers`.
+  Change settings at runtime with `hyprctl eval 'hl.config({ … })'`, then
+  `hyprctl reload` if the change needs a config pass.
+- `hyprctl dispatch exit` fails with
+  `hl.dispatch: expected a dispatcher (e.g. hl.dsp.window.close())`. Dispatchers
+  are Lua expressions: `hyprctl dispatch 'hl.dsp.exit()'`,
+  `hyprctl dispatch 'hl.dsp.focus({ workspace = "1" })'`. To log out of the
+  session, `hl.dsp.exit()` or `loginctl terminate-session "$XDG_SESSION_ID"`
+  both work; the pill's power surface has a Logout tile as well.
+
+Binds, monitor rules, workspace rules and window rules are generated as
+`hl.bind` / `hl.monitor` / `hl.workspace_rule` / `hl.window_rule` entries; see
+`modules/users/features/hyprland/` for the sources.
