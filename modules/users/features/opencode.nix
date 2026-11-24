@@ -1,4 +1,9 @@
-{ config, ... }:
+{
+  config,
+  inputs,
+  pkgs,
+  ...
+}:
 
 let
   # Static, non-host-varying config: stays in its native language under
@@ -7,7 +12,10 @@ let
   configDir = "${config.home.homeDirectory}/nixos-config/configs/opencode";
 in
 {
-  programs.opencode.enable = true;
+  programs.opencode = {
+    enable = true;
+    package = inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.opencode;
+  };
 
   xdg.configFile = {
     "opencode/opencode.jsonc".source =

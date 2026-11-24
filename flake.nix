@@ -11,6 +11,10 @@
     zen-browser.inputs.nixpkgs.follows = "nixpkgs";
     zen-browser.inputs.home-manager.follows = "home-manager";
 
+    # OpenCode 2.x is not in nixpkgs yet; build its own pinned release. Keep
+    # its nixpkgs pin so its fixed node_modules hash stays reproducible.
+    opencode.url = "github:anomalyco/opencode/v2.4.1";
+
     home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
