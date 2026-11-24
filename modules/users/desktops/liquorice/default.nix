@@ -147,6 +147,14 @@ in
       (bind ''"PRINT"'' "hyprshot -m region --clipboard-only")
       (bind ''mod .. " + SHIFT + S"'' "hyprshot -m region --clipboard-only")
       (bind ''mod .. " + SHIFT + Print"'' "hyprshot -m window --clipboard-only")
+
+      # Dotfiles parity: SUPER+F5 grabs the active window to Pictures, and
+      # SUPER+S opens the scratch markdown buffer as the pinned "scratch"
+      # window (window rule in features/hyprland/windowrules.nix).
+      (bind ''mod .. " + F5"'' "hyprshot -m window")
+      (bind ''mod .. " + S"''
+        "ghostty --title=\"scratch\" -e nvim --cmd \"let g:is_hypr_scratch = 1\" /tmp/scratch.md"
+      )
     ];
   };
 }
