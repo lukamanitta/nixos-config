@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 # Hardware-specific settings that are not part of the generated
 # hardware-configuration.nix (disks/filesystems). The machine is a Ryzen
@@ -45,4 +45,7 @@
   # Gigabyte's IT8696 sits in an ACPI-claimed region; the it87 driver needs
   # the relaxed resource check or it fails with "No such device".
   boot.kernelParams = [ "acpi_enforce_resources=lax" ];
+
+  # In-tree it87 doesn't recognise the IT8696E; use the out-of-tree driver.
+  boot.extraModulePackages = [ config.boot.kernelPackages.it87 ];
 }
