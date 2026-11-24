@@ -254,7 +254,11 @@ restarted (`herdr server stop`, which restores its tabs).
 
 `configs/colourme/config.toml` uses `hyprctl -i 0` for its reload hook and
 tolerates absent waybar/ghostty processes, so `colourme <scheme>` succeeds from
-any shell.
+any shell. Tools that call `hyprctl` internally (waypaper asks for
+`monitors -j`) ignore `-i`: `configs/hypr/scripts/wallpaper-restore.sh`
+therefore resolves the live signature from `hyprctl instances` before running
+waypaper, and both the `[waypaper]` post-hook and the login restore use that
+script.
 
 ## Input
 

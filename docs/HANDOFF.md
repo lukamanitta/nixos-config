@@ -14,6 +14,16 @@ only trust live state on the machine itself.
   systemd-boot on its own 1 GiB ESP all work.
 - **The trial is going well.** CoolerControl reads the IT8696 and fan curves
   work, Tailscale is up, and Affinity launches.
+- **The desktop is LiquoRice** (Quickshell) on the workstation; LitheDE stays
+  as the fallback via `my.desktops.environment`. Per-monitor workspaces are
+  pinned (1/3/5/7/9 on DP-2, 2/4/6/8/10 on HDMI-A-2).
+- **colourme drives every app colour**: Hyprland, Ghostty, Quickshell, Zen
+  (live userChrome reload), Neovim and the wallpaper. Wallpapers live in
+  `~/dotfiles/wallpaper/.wallpaper` (symlinked at `~/.wallpaper`) and go
+  through waypaper + hyprpaper; the lock screen reads the same state.
+- **Hyprland 0.55.4 carries a local backport** for layer-surface keyboard
+  focus (upstream fix is 0.56.0); see the troubleshooting entry and the patch
+  header. Remove both when nixpkgs catches up.
 - **Arch is intact** on the WD disk (p1 ESP + p2 swap + p3 root) and is
   reachable via rEFInd in the firmware menu — boot it once to confirm, since the
   GPT conversion changed partition GUIDs. It is the fallback until a full
@@ -51,17 +61,21 @@ commands), [WORKSTATION-TROUBLESHOOTING.md](./WORKSTATION-TROUBLESHOOTING.md)
 - Affinity opening a document and its plugin loader (it launches).
 - OBS capture; OpenRGB (`true-white`, ENE DRAM controllers + IT5711).
 - `rclone-gdrive` at `~/mnt/gdrive` and `gdrive-pin`.
-- Wi-Fi/Bluetooth on NixOS; the DP-2/HDMI-A-2 monitor layout.
+- Wi-Fi/Bluetooth on NixOS.
 - DaVinci Resolve (opt-in; RDNA4 + ROCm 7.2.x remains unproven).
+- Colour seams on the disposable VM (they are verified on the workstation).
 
 ## Next actions in order
 
 1. Work through the "Not verified yet" list; record failures in the
    troubleshooting doc rather than fixing them silently.
-2. Do a full NixOS workday. Keep Arch bootable until it passes.
-3. Copy the restic password and `rclone.conf` **off the WD disk** — they are the
+2. LiquoRice polish: toolkit theming (GTK/Qt/icons), the in-pill polkit prompt,
+   and vendoring the wallpapers so the desktop no longer depends on the
+   `~/dotfiles` checkout.
+3. Do a full NixOS workday. Keep Arch bootable until it passes.
+4. Copy the restic password and `rclone.conf` **off the WD disk** — they are the
    only things the removal procedure cannot recreate.
-4. Then follow [WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md)
+5. Then follow [WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md)
    path A (re-layout + reinstall + restore). Secure Boot comes after that.
 
 ## Repo state at handoff
@@ -71,5 +85,17 @@ commands), [WORKSTATION-TROUBLESHOOTING.md](./WORKSTATION-TROUBLESHOOTING.md)
 - `hardware.nix` has `acpi_enforce_resources=lax` and
   `boot.extraModulePackages = [ config.boot.kernelPackages.it87 ]` (`672069b`).
 - `default.nix` has `efiDeviceHandle = "FS0"`.
+- Desktop: LiquoRice active, pinned workspaces, pill Logout, hyprpolkitagent,
+  dark scheme preference, Roboto Mono vendored, Neovim config in
+  `configs/nvim`, colour seams for Quickshell/Zen/Neovim/wallpaper.
+- Custom patch: `modules/hosts/features/patches/hyprland-focus-restore.patch`
+  plus the overlay in `modules/hosts/features/hyprland.nix`; remove with
+  nixpkgs Hyprland 0.56+.
+- The HDMI Arzopa panel is capped at 114.7 Hz with a modeline (the 144/120 Hz
+  EDID modes drop out; see troubleshooting).
+- Runtime paths owned by activation (not in git): `~/.config/nvim`,
+  `~/.wallpaper`, `~/.config/waypaper/wallpaper.ini`,
+  `~/.local/state/colourme/*`.
 - Docs: this file, `WORKSTATION.md`, `WORKSTATION-TROUBLESHOOTING.md`,
-  `WORKSTATION-ARCH-REMOVAL.md`, `DECISIONS.md` D45–D49, `ROADMAP.md`.
+  `WORKSTATION-ARCH-REMOVAL.md`, `DECISIONS.md` D45–D49, `ROADMAP.md`,
+  `THEME-PIPELINE.md`.

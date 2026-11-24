@@ -223,7 +223,9 @@ The `[waypaper]` section renders waypaper's state file
 `waypaper --restore`, whose hyprpaper backend repaints all outputs live.
 `modules/users/features/wallpaper.nix` installs waypaper and symlinks
 `~/.wallpaper` at `~/dotfiles/wallpaper/.wallpaper` — 59 MB of images kept in
-the dotfiles checkout rather than vendored for now. Waypaper's settings live in
+the dotfiles checkout rather than vendored for now. A machine without that
+checkout (e.g. the test VM) gets a dangling symlink and no wallpapers; vendor a
+curated set before the removal path needs it. Waypaper's settings live in
 `~/.config/waypaper/config.ini` as ordinary runtime state; hyprpaper is the
 only installed backend, so waypaper selects it automatically.
 

@@ -146,8 +146,21 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
       `XCURSOR_THEME`; hypridle disabled for now (D39).
 - [ ] LiquoRice polish: toolkit theming (GTK/Qt/icons), lock-as-greeter, pill
       surface keybinds beyond launcher/clipboard/media.
+- [x] LiquoRice on the workstation: pill Logout tile, F5/scratch binds, pinned
+      per-monitor workspaces, hyprpolkitagent, dark colour-scheme preference,
+      `SUPER+L` deliberately unbound (interferes with window navigation).
+- [x] Colour seams for Quickshell (live JSON watch), Zen (live userChrome
+      reload via autoconfig), Neovim (runtime shims) and wallpapers; colourme
+      installed in `home.packages`.
+- [x] Neovim config ported to `configs/nvim` (vim.pack + Mason), runtime colour
+      files in `~/.local/state/colourme/nvim/`.
+- [x] Hyprland 0.55.4 keyboard-focus backport (upstream 0.56.0) so layer
+      surfaces release focus when the pill closes.
 - [x] Wallpapers: scheme-driven through waypaper + hyprpaper, restored at login
       and on `colourme <scheme>`.
+- [ ] Vendor or curate wallpapers: `~/.wallpaper` is a symlink into the 59 MB
+      `~/dotfiles` checkout for now.
+- [ ] Verify the new colour seams on the test VM (THEME-PIPELINE step 7).
 - [ ] LiquoRice polkit prompt: show the password prompt as a pill surface and
       retire `services.hyprpolkitagent`.
 - [ ] Autologin + Quickshell lock-as-greeter — deferred (DECISIONS D23/D24).
