@@ -11,7 +11,8 @@ let
     ++ lib.optional (services.osd != null) services.osd
     ++ lib.optional (services.wallpaper != null) services.wallpaper
     ++ lib.optional (services.statusBar != null) services.statusBar
-    ++ lib.optional (services.removableMedia != null) services.removableMedia;
+    ++ lib.optional (services.removableMedia != null) services.removableMedia
+    ++ config.my.hyprland.autostartLate;
   body = lib.concatMapStrings (c: "  hl.exec_cmd(${toLua c})\n") cmds;
 in
 lib.mkIf (cmds != [ ]) {

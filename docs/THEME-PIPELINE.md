@@ -1,7 +1,7 @@
 # Theme pipeline (colourme × Home Manager)
 
 Plan for integrating `colourme` into this flake. Status: **implemented for the
-Hyprland, Ghostty, Quickshell, Zen Browser and Neovim seams**.
+Hyprland, Ghostty, Quickshell, Zen Browser, Neovim and wallpaper seams**.
 
 Related: `DECISIONS.md` D18/D25 (superseded in part by D27), and the colourme
 repo's `INTERFACE_CHANGES.md` (required changes) + `REVIEW.md` (bug list).
@@ -26,7 +26,7 @@ Nix owns structure and points each themed value at a **runtime-writable file**
 that `colourme` renders. Nix never owns a themed byte. Live reload is driven by
 `colourme`'s own `post_hook`s (kept in its config, not in Nix).
 
-Five seams, all writing **outside git**:
+Six seams, all writing **outside git**:
 
 | App | Nix points at | `colourme` writes | Reload |
 |---|---|---|---|
@@ -35,6 +35,7 @@ Five seams, all writing **outside git**:
 | Quickshell | `FileView` watcher in `Colours.qml` | `~/.local/state/colourme/colours.json` | (none — file watch is instant) |
 | Zen Browser | `colourme.cfg` module registering a USER_SHEET | `~/.local/state/colourme/zen-userChrome.css` | (none — module polls the file) |
 | Neovim | shims in `lua/ui/` loading runtime files | `~/.local/state/colourme/nvim/*.lua` | next Neovim start |
+| Wallpaper | waypaper state restored through hyprpaper | `~/.config/waypaper/wallpaper.ini` | `post_hook = "waypaper --restore …"` |
 
 Waybar, tmux, starship are intentionally out of scope for now. tmux/starship
 inherit Ghostty's terminal palette.
@@ -213,6 +214,23 @@ two thin shims at `lua/ui/set_colourscheme.lua` and
 `lua/ui/palettes/colourme.lua` that `loadfile` the runtime files and fall back
 to Gruvbox, so colourme never writes inside the repo. There is no watcher: a
 running Neovim keeps its palette until restarted.
+
+### Wallpaper
+
+Implemented. Each scheme file carries `wallpaper = "~/.wallpaper/<scheme>/<file>"`.
+The `[waypaper]` section renders waypaper's state file
+(`~/.config/waypaper/wallpaper.ini`) and restores it with
+`waypaper --restore`, whose hyprpaper backend repaints all outputs live.
+`modules/users/features/wallpaper.nix` installs waypaper and symlinks
+`~/.wallpaper` at `~/dotfiles/wallpaper/.wallpaper` — 59 MB of images kept in
+the dotfiles checkout rather than vendored for now. Waypaper's settings live in
+`~/.config/waypaper/config.ini` as ordinary runtime state; hyprpaper is the
+only installed backend, so waypaper selects it automatically.
+
+At login, `my.hyprland.autostartLate` runs a small helper after
+`services.wallpaper = hyprpaper`; it waits for hyprpaper's IPC socket and then
+restores the saved state, so the wallpaper is right on the first frame. The
+Quickshell lock screen reads the same state file for its backdrop.
 
 ## Defaults — strategy A (build-time render, seed-if-absent)
 

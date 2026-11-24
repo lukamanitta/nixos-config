@@ -27,6 +27,11 @@ destination = "~/.local/state/colourme/nvim/set_colourscheme.lua"
 template = "templates/nvim-base16.lua"
 destination = "~/.local/state/colourme/nvim/palette.lua"
 
+[waypaper]
+template = "templates/waypaper.ini"
+destination = "~/.config/waypaper/wallpaper.ini"
+post_hook = "waypaper --restore --state-file ~/.config/waypaper/wallpaper.ini"
+
 [gtk3]
 template = "templates/gtk3.css"
 destination = "~/.config/gtk-3.0/colourme-gtk.css"

@@ -144,8 +144,10 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
       scripts from `configs/hypr/scripts`, roles set, VM switched to it (D34).
 - [x] LiquoRice cursor: WhiteSur pointers via `home.pointerCursor` and
       `XCURSOR_THEME`; hypridle disabled for now (D39).
-- [ ] LiquoRice polish: toolkit theming (GTK/Qt/icons), wallpaper, lock-as-
-      greeter, pill surface keybinds beyond launcher/clipboard/media.
+- [ ] LiquoRice polish: toolkit theming (GTK/Qt/icons), lock-as-greeter, pill
+      surface keybinds beyond launcher/clipboard/media.
+- [x] Wallpapers: scheme-driven through waypaper + hyprpaper, restored at login
+      and on `colourme <scheme>`.
 - [ ] LiquoRice polkit prompt: show the password prompt as a pill surface and
       retire `services.hyprpolkitagent`.
 - [ ] Autologin + Quickshell lock-as-greeter — deferred (DECISIONS D23/D24).

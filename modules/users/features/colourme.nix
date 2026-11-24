@@ -95,6 +95,9 @@ in
       _seed_colourme ${defaultThemes}/.local/state/colourme/nvim/palette.lua \
         "$HOME/.local/state/colourme/nvim/palette.lua" \
         "$HOME/.local/state/colourme/seeded/nvim-palette.lua"
+      _seed_colourme ${defaultThemes}/.config/waypaper/wallpaper.ini \
+        "$HOME/.config/waypaper/wallpaper.ini" \
+        "$HOME/.local/state/colourme/seeded/waypaper.ini"
       _seed_colourme ${defaultThemes}/.config/gtk-3.0/colourme-gtk.css \
         "$HOME/.config/gtk-3.0/colourme-gtk.css" \
         "$HOME/.local/state/colourme/seeded/gtk3.css"

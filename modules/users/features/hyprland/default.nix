@@ -34,6 +34,16 @@
       default = [ ];
       description = "Commands started on hyprland.start, before the service roles.";
     };
+
+    autostartLate = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      description = ''
+        Commands started on hyprland.start after the service roles, for things
+        that need those services (e.g. restoring a wallpaper through
+        hyprpaper).
+      '';
+    };
   };
 
   config = {

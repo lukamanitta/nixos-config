@@ -17,6 +17,7 @@
     ../desktops/liquorice
     ../features/ghostty.nix
     ../features/herdr.nix
+    ../features/wallpaper.nix
     inputs.msi-nix.homeManagerModules.default
     ../features/zen-browser.nix
   ];
