@@ -101,8 +101,9 @@
         ../../users/features/openrgb.nix
       ];
 
-      # LitheDE is the stable desktop; switch to "liquorice" when desired.
-      my.desktops.environment = "lithe";
+      # LiquoRice (Quickshell) is the desktop; flip to "lithe" to fall back to
+      # the stable LitheDE while bringing a change up.
+      my.desktops.environment = "liquorice";
 
       programs.msi = {
         enable = true;
