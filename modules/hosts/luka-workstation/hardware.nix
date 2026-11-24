@@ -41,4 +41,8 @@
 
   # RTL8852CE Wi-Fi + Bluetooth and RTL8125 Ethernet are covered by the
   # in-kernel rtw89/r8169 drivers and linux-firmware.
+
+  # Gigabyte's IT8696 sits in an ACPI-claimed region; the it87 driver needs
+  # the relaxed resource check or it fails with "No such device".
+  boot.kernelParams = [ "acpi_enforce_resources=lax" ];
 }
