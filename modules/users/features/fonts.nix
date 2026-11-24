@@ -12,6 +12,7 @@ let
     "SF-Mono"
     "SymbolsNerdFont"
     "Roboto"
+    "RobotoMono"
     "Inter"
     "Ubuntu"
   ];
