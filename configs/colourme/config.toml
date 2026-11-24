@@ -19,6 +19,14 @@ destination = "~/.local/state/colourme/colours.json"
 template = "templates/zen_browser.css"
 destination = "~/.local/state/colourme/zen-userChrome.css"
 
+[nvim]
+template = "templates/nvim.lua"
+destination = "~/.local/state/colourme/nvim/set_colourscheme.lua"
+
+[nvim-base16]
+template = "templates/nvim-base16.lua"
+destination = "~/.local/state/colourme/nvim/palette.lua"
+
 [gtk3]
 template = "templates/gtk3.css"
 destination = "~/.config/gtk-3.0/colourme-gtk.css"

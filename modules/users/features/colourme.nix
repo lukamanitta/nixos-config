@@ -89,6 +89,12 @@ in
       _seed_colourme ${defaultThemes}/.local/state/colourme/zen-userChrome.css \
         "$HOME/.local/state/colourme/zen-userChrome.css" \
         "$HOME/.local/state/colourme/seeded/zen-userChrome.css"
+      _seed_colourme ${defaultThemes}/.local/state/colourme/nvim/set_colourscheme.lua \
+        "$HOME/.local/state/colourme/nvim/set_colourscheme.lua" \
+        "$HOME/.local/state/colourme/seeded/nvim-set_colourscheme.lua"
+      _seed_colourme ${defaultThemes}/.local/state/colourme/nvim/palette.lua \
+        "$HOME/.local/state/colourme/nvim/palette.lua" \
+        "$HOME/.local/state/colourme/seeded/nvim-palette.lua"
       _seed_colourme ${defaultThemes}/.config/gtk-3.0/colourme-gtk.css \
         "$HOME/.config/gtk-3.0/colourme-gtk.css" \
         "$HOME/.local/state/colourme/seeded/gtk3.css"

@@ -1,7 +1,7 @@
 # Theme pipeline (colourme × Home Manager)
 
 Plan for integrating `colourme` into this flake. Status: **implemented for the
-Hyprland, Ghostty, Quickshell and Zen Browser seams**.
+Hyprland, Ghostty, Quickshell, Zen Browser and Neovim seams**.
 
 Related: `DECISIONS.md` D18/D25 (superseded in part by D27), and the colourme
 repo's `INTERFACE_CHANGES.md` (required changes) + `REVIEW.md` (bug list).
@@ -26,7 +26,7 @@ Nix owns structure and points each themed value at a **runtime-writable file**
 that `colourme` renders. Nix never owns a themed byte. Live reload is driven by
 `colourme`'s own `post_hook`s (kept in its config, not in Nix).
 
-Four seams, all writing **outside git**:
+Five seams, all writing **outside git**:
 
 | App | Nix points at | `colourme` writes | Reload |
 |---|---|---|---|
@@ -34,6 +34,7 @@ Four seams, all writing **outside git**:
 | Ghostty | `theme = Luka` in config | `~/.config/ghostty/themes/Luka` | `post_hook = "pkill -USR2 ghostty"` |
 | Quickshell | `FileView` watcher in `Colours.qml` | `~/.local/state/colourme/colours.json` | (none — file watch is instant) |
 | Zen Browser | `colourme.cfg` module registering a USER_SHEET | `~/.local/state/colourme/zen-userChrome.css` | (none — module polls the file) |
+| Neovim | shims in `lua/ui/` loading runtime files | `~/.local/state/colourme/nvim/*.lua` | next Neovim start |
 
 Waybar, tmux, starship are intentionally out of scope for now. tmux/starship
 inherit Ghostty's terminal palette.
@@ -71,6 +72,8 @@ configs/colourme/
     ghostty              # ghostty theme file (background/foreground/palette 0..21)
     quickshell.json      # emits {"surfaceDefault": "...", ...}
     zen_browser.css      # Zen chrome colours (userChrome.css variables)
+    nvim.lua             # sets background + vim.g.colourscheme
+    nvim-base16.lua      # returns the base16 palette table
   schemes/
     _template.toml       # canonical key set
     Gruvbox.toml         # default scheme
@@ -97,6 +100,14 @@ destination = "~/.local/state/colourme/colours.json"
 [zen_browser]
 template = "templates/zen_browser.css"
 destination = "~/.local/state/colourme/zen-userChrome.css"
+
+[nvim]
+template = "templates/nvim.lua"
+destination = "~/.local/state/colourme/nvim/set_colourscheme.lua"
+
+[nvim-base16]
+template = "templates/nvim-base16.lua"
+destination = "~/.local/state/colourme/nvim/palette.lua"
 ```
 
 Wiring (new `modules/users/features/colourme.nix`):
@@ -193,6 +204,16 @@ If Zen ever ships native userChrome.css reloading (or a Sine-style reload hook),
 drop the `extraPrefs`/autoconfig override and let colourme write the profile
 file directly.
 
+### Neovim
+
+Implemented. `configs/colourme/templates/nvim.lua` and `nvim-base16.lua` write
+`~/.local/state/colourme/nvim/set_colourscheme.lua` and `palette.lua`.
+The config lives at `configs/nvim` (symlinked to `~/.config/nvim`) and keeps
+two thin shims at `lua/ui/set_colourscheme.lua` and
+`lua/ui/palettes/colourme.lua` that `loadfile` the runtime files and fall back
+to Gruvbox, so colourme never writes inside the repo. There is no watcher: a
+running Neovim keeps its palette until restarted.
+
 ## Defaults — strategy A (build-time render, seed-if-absent)
 
 A fresh install must look right with no `colourme` run. Generate the defaults
@@ -261,8 +282,8 @@ all of the runtime seams directly — no wrapper needed.
 2. Add a flake to colourme exposing a package. *(done)*
 3. Add `inputs.colourme` to `flake.nix`; build the defaults derivation. *(done)*
 4. Commit `configs/colourme/` + the `colourme.nix` symlink feature. *(done)*
-5. Re-point the four seams: hypr `settings.nix`, ghostty config, quickshell
-   `Colours.qml`, Zen `userChrome.css`. *(done)*
+5. Re-point the app seams: hypr `settings.nix`, ghostty config, quickshell
+   `Colours.qml`, Zen `userChrome.css`, Neovim shims. *(done)*
 6. Add `my.theme.defaultScheme` + the activation seed. *(done)*
 7. Add D27 to `DECISIONS.md` (done) and verify on the test VM.
 

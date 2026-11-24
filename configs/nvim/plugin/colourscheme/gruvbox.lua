@@ -1,0 +1,20 @@
+if vim.g.colourscheme == "Gruvbox" then
+    vim.pack.add({
+        { src = "https://github.com/ellisonleao/gruvbox.nvim" },
+    })
+
+    require("gruvbox").setup({
+        contrast = "",
+    })
+
+    vim.cmd.colorscheme("gruvbox")
+
+    local diagnostic_types = { "Error", "Warn", "Info", "Hint" }
+    for _, severity in ipairs(diagnostic_types) do
+        local hl = "DiagnosticSign" .. severity
+        require("h").set_hl(
+            hl,
+            { fg = require("h").get_hl(hl, "fg#"), bg = "NONE" }
+        )
+    end
+end
