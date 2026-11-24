@@ -21,9 +21,11 @@ let
   lua = lib.generators.mkLuaInline;
   toLua = lib.generators.toLua { };
   exec = cmd: lua "hl.dsp.exec_cmd(${toLua cmd})";
+  # `key` is a Lua expression, so callers write either `mod .. " + M"` or a
+  # bare `"PRINT"` for an unmodified key.
   bind = key: cmd: {
     _args = [
-      (lua ''mod .. " + ${key}"'')
+      (lua key)
       (exec cmd)
     ];
   };
@@ -138,8 +140,13 @@ in
 
     # Pill surfaces that are not part of the shared role interface.
     wayland.windowManager.hyprland.settings.bind = [
-      (bind "M" "${scripts}/open-pill-surface.sh media")
-      (bind "P" "${scripts}/open-pill-surface.sh keyboard")
+      (bind ''mod .. " + M"'' "${scripts}/open-pill-surface.sh media")
+      (bind ''mod .. " + P"'' "${scripts}/open-pill-surface.sh keyboard")
+
+      # Screenshots, matching LitheDE's binds (hyprshot is in home.packages).
+      (bind ''"PRINT"'' "hyprshot -m region --clipboard-only")
+      (bind ''mod .. " + SHIFT + S"'' "hyprshot -m region --clipboard-only")
+      (bind ''mod .. " + SHIFT + Print"'' "hyprshot -m window --clipboard-only")
     ];
   };
 }
