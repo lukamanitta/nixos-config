@@ -36,7 +36,7 @@ in
       adjust-cursor-thickness = 2
 
       adjust-cell-height = 25%
-      window-padding-x = 0
+      window-padding-x = 6
       window-padding-y = 0
 
       confirm-close-surface = false
