@@ -1,7 +1,7 @@
 # Theme pipeline (colourme × Home Manager)
 
 Plan for integrating `colourme` into this flake. Status: **implemented for the
-Hyprland and Ghostty seams**; the Quickshell seam below is still pending.
+Hyprland, Ghostty and Quickshell seams**.
 
 Related: `DECISIONS.md` D18/D25 (superseded in part by D27), and the colourme
 repo's `INTERFACE_CHANGES.md` (required changes) + `REVIEW.md` (bug list).
@@ -132,21 +132,22 @@ symlink `colourme` couldn't overwrite); the real `themes/Luka` is created by
 `colourme` thanks to §1. Reload via `pkill -USR2 ghostty` (Ghostty re-reads
 config on `SIGUSR2`).
 
-### Quickshell (seam rework)
+### Quickshell
 
-Goal: keep generated colour data out of git and update instantly. Replace the
-current "overwrite `Colours.qml`" approach with a runtime JSON + file watch:
+Implemented. `configs/quickshell/_Shared/Singletons/Colours.qml` is a
+`FileView` (`watchChanges: true`, `onFileChanged: reload()`) whose
+`JsonAdapter` maps `~/.local/state/colourme/colours.json` onto `string`
+properties; the singleton re-exposes them as the `color` values the shell
+reads. `Theme.qml` is unchanged (`colour: Colours`). A scheme switch updates
+every surface instantly — there is no post_hook and no restart.
 
-- `colourme` writes `~/.local/state/colourme/colours.json` (gitignored by
-  virtue of living outside the repo).
-- `configs/quickshell/_Shared/Singletons/Colours.qml` becomes a `FileView`
-  watcher (mirror the existing `Dyn.qml` pattern) that parses that JSON with
-  `watchChanges: true` and exposes the same property names as today. `Theme.qml`
-  is unchanged (`colour: Colours`).
-- If the JSON is missing/unparseable (before the seed runs), fall back to a
-  committed `_Shared/Singletons/colours.default.json` with the same shape, so
-  Quickshell never renders unthemed.
-- No `post_hook`; the watch makes it instant.
+The adapter's declared defaults are the committed fallback palette, so the
+shell is themed before the first seed/colourme run and if the file is ever
+missing or unparseable. Keep the keys in sync with
+`configs/colourme/templates/quickshell.json`.
+
+The standalone `lockdaemon/` config reaches the same singleton through its
+`_Shared` symlink, so the lock screen follows the scheme as well.
 
 Quickshell wiring: enable `programs.quickshell` with
 `activeConfig = "Pill"` and `configs.Pill` set to an out-of-store symlink of
@@ -221,15 +222,12 @@ derivation); it is not in `home.packages`. For live switching you run the clone
 3. Add `inputs.colourme` to `flake.nix`; build the defaults derivation. *(done)*
 4. Commit `configs/colourme/` + the `colourme.nix` symlink feature. *(done)*
 5. Re-point the three seams: hypr `settings.nix`, ghostty config, quickshell
-   `Colours.qml` + `colours.default.json`. *(hypr + ghostty done; quickshell
-   pending)*
+   `Colours.qml`. *(done)*
 6. Add `my.theme.defaultScheme` + the activation seed. *(done)*
 7. Add D27 to `DECISIONS.md` (done) and verify on the test VM.
 
 ## Open questions
 
-- Exact Quickshell property/path plumbing in `Colours.qml` (confirm against
-  `Dyn.qml` when implementing).
 - Whether `colourme` should also touch the *live* default when
   `defaultScheme` changes in Nix, or strictly seed-if-absent (current plan:
   seed-if-absent, never clobber).
