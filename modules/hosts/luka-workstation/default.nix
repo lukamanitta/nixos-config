@@ -116,13 +116,13 @@
         monitors = [
           {
             output = "DP-2";
-            mode = "preferred";
+            mode = "highrr";
             position = "0x0";
             scale = "1";
           }
           {
             output = "HDMI-A-2";
-            mode = "preferred";
+            mode = "highrr";
             position = "0x1080";
             scale = "1";
           }
