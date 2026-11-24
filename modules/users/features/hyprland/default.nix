@@ -39,6 +39,11 @@
   config = {
     home.packages = [ pkgs.xdg-terminal-exec ];
 
+    # The polkit *mechanism* is system-wide, but GUI apps need an agent to
+    # raise the password prompt; the Arch dotfiles started hyprpolkitagent
+    # from autostart.
+    services.hyprpolkitagent.enable = true;
+
     wayland.windowManager.hyprland = {
       enable = true;
       package = null;

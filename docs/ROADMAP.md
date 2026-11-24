@@ -146,6 +146,8 @@ Rationale and full design: [DECISIONS.md](./DECISIONS.md) D3–D31 and
       `XCURSOR_THEME`; hypridle disabled for now (D39).
 - [ ] LiquoRice polish: toolkit theming (GTK/Qt/icons), wallpaper, lock-as-
       greeter, pill surface keybinds beyond launcher/clipboard/media.
+- [ ] LiquoRice polkit prompt: show the password prompt as a pill surface and
+      retire `services.hyprpolkitagent`.
 - [ ] Autologin + Quickshell lock-as-greeter — deferred (DECISIONS D23/D24).
 - [ ] Hyprland stable for one week on the VM.
 
