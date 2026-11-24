@@ -86,6 +86,9 @@ in
       _seed_colourme ${defaultThemes}/.local/state/colourme/colours.json \
         "$HOME/.local/state/colourme/colours.json" \
         "$HOME/.local/state/colourme/seeded/colours.json"
+      _seed_colourme ${defaultThemes}/.local/state/colourme/zen-userChrome.css \
+        "$HOME/.local/state/colourme/zen-userChrome.css" \
+        "$HOME/.local/state/colourme/seeded/zen-userChrome.css"
       _seed_colourme ${defaultThemes}/.config/gtk-3.0/colourme-gtk.css \
         "$HOME/.config/gtk-3.0/colourme-gtk.css" \
         "$HOME/.local/state/colourme/seeded/gtk3.css"

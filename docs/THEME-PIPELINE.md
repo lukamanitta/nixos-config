@@ -1,7 +1,7 @@
 # Theme pipeline (colourme × Home Manager)
 
 Plan for integrating `colourme` into this flake. Status: **implemented for the
-Hyprland, Ghostty and Quickshell seams**.
+Hyprland, Ghostty, Quickshell and Zen Browser seams**.
 
 Related: `DECISIONS.md` D18/D25 (superseded in part by D27), and the colourme
 repo's `INTERFACE_CHANGES.md` (required changes) + `REVIEW.md` (bug list).
@@ -26,13 +26,14 @@ Nix owns structure and points each themed value at a **runtime-writable file**
 that `colourme` renders. Nix never owns a themed byte. Live reload is driven by
 `colourme`'s own `post_hook`s (kept in its config, not in Nix).
 
-Three seams, all writing **outside git**:
+Four seams, all writing **outside git**:
 
 | App | Nix points at | `colourme` writes | Reload |
 |---|---|---|---|
 | Hyprland | `require("theme.colourme")` in generated lua | `~/.config/hypr/theme/colourme.lua` | `post_hook = "hyprctl -i 0 reload"` |
 | Ghostty | `theme = Luka` in config | `~/.config/ghostty/themes/Luka` | `post_hook = "pkill -USR2 ghostty"` |
 | Quickshell | `FileView` watcher in `Colours.qml` | `~/.local/state/colourme/colours.json` | (none — file watch is instant) |
+| Zen Browser | `colourme.cfg` module registering a USER_SHEET | `~/.local/state/colourme/zen-userChrome.css` | (none — module polls the file) |
 
 Waybar, tmux, starship are intentionally out of scope for now. tmux/starship
 inherit Ghostty's terminal palette.
@@ -69,6 +70,7 @@ configs/colourme/
     hypr.lua             # emits `return { activeBorderColor = "...", ... }`
     ghostty              # ghostty theme file (background/foreground/palette 0..21)
     quickshell.json      # emits {"surfaceDefault": "...", ...}
+    zen_browser.css      # Zen chrome colours (userChrome.css variables)
   schemes/
     _template.toml       # canonical key set
     Gruvbox.toml         # default scheme
@@ -91,6 +93,10 @@ post_hook = "pkill -USR2 ghostty"
 [quickshell]
 template = "templates/quickshell.json"
 destination = "~/.local/state/colourme/colours.json"
+
+[zen_browser]
+template = "templates/zen_browser.css"
+destination = "~/.local/state/colourme/zen-userChrome.css"
 ```
 
 Wiring (new `modules/users/features/colourme.nix`):
@@ -153,6 +159,33 @@ Quickshell wiring: enable `programs.quickshell` with
 `activeConfig = "Pill"` and `configs.Pill` set to an out-of-store symlink of
 `configs/quickshell` (so the QML stays live-editable). The JSON seam means
 nothing generated lands in that tree.
+
+### Zen Browser
+
+Implemented. `configs/colourme/templates/zen_browser.css` is written to
+`~/.local/state/colourme/zen-userChrome.css`. Zen applies `userChrome.css` at
+startup but never reloads it, so `modules/users/features/zen-browser.nix` adds
+a small autoconfig module to the *unwrapped* Zen package (the browser resolves
+its application directory there; the nixpkgs wrapper only symlinks the files):
+
+- `defaults/pref/00-colourme-autoconfig.js` sets
+  `general.config.filename = "colourme.cfg"` and disables the autoconfig
+  sandbox. The `00-` name keeps it clear of the wrapper's own autoconfig.js.
+- `colourme.cfg` registers the profile's `chrome/colourme/chrome.manifest` and
+  imports `chrome://colourme/content/colourme.sys.mjs`.
+- That module registers the runtime file as a USER_SHEET and polls its mtime
+  once a second, re-registering with a cache-busting query when `colourme`
+  rewrites it — live update with no post_hook and no restart.
+
+Home Manager activation resolves the default profile from `profiles.ini` and
+symlinks `chrome/userChrome.css` at the runtime file, plus the module and
+manifest under `chrome/colourme/`. The module stats the runtime file itself
+rather than the symlink, because `nsIFile.lastModifiedTime` does not follow
+symlinks.
+
+If Zen ever ships native userChrome.css reloading (or a Sine-style reload hook),
+drop the `extraPrefs`/autoconfig override and let colourme write the profile
+file directly.
 
 ## Defaults — strategy A (build-time render, seed-if-absent)
 
@@ -222,8 +255,8 @@ all of the runtime seams directly — no wrapper needed.
 2. Add a flake to colourme exposing a package. *(done)*
 3. Add `inputs.colourme` to `flake.nix`; build the defaults derivation. *(done)*
 4. Commit `configs/colourme/` + the `colourme.nix` symlink feature. *(done)*
-5. Re-point the three seams: hypr `settings.nix`, ghostty config, quickshell
-   `Colours.qml`. *(done)*
+5. Re-point the four seams: hypr `settings.nix`, ghostty config, quickshell
+   `Colours.qml`, Zen `userChrome.css`. *(done)*
 6. Add `my.theme.defaultScheme` + the activation seed. *(done)*
 7. Add D27 to `DECISIONS.md` (done) and verify on the test VM.
 

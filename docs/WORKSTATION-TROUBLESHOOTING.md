@@ -25,6 +25,7 @@ actually happened on this machine, with the cause and the fix that worked.
 | `hyprctl keyword` is ignored / `hyprctl dispatch exit` errors | [Hyprland config is Lua, not ini](#hyprland-config-is-lua-not-ini) |
 | `hyprctl` can't connect after a compositor restart | [Stale Hyprland environment in old panes](#stale-hyprland-environment-in-old-panes) |
 | Keyboard stops working after closing a LiquoRice surface | [Keyboard dead after the pill closes](#keyboard-dead-after-the-pill-closes) |
+| Zen keeps the old colours after a scheme switch | [Zen userChrome live reload](#zen-userchrome-live-reload) |
 
 ## Disk and partition work
 
@@ -278,6 +279,33 @@ by the overlay in `modules/hosts/features/hyprland.nix`. Remove both once
 nixpkgs ships Hyprland 0.56.0 or newer. The running compositor is the old
 binary, so the fix takes effect after logging out and back in, not on
 `nixos-rebuild switch` alone.
+
+## Theming
+
+### Zen userChrome live reload
+
+**Symptom:** `colourme <scheme>` repaints the rest of the desktop but Zen keeps
+the old chrome palette, or never picks it up at all.
+
+**Checks:**
+
+- `about:config` → `colourme.zen.error`. The autoconfig loader sets it if the
+  profile manifest or the sheet registration failed; unset means the module
+  loaded.
+- `~/.config/zen/<profile>/chrome/colourme/` contains `chrome.manifest` and
+  `colourme.sys.mjs`; `~/.config/zen/<profile>/chrome/userChrome.css` is a
+  symlink to `~/.local/state/colourme/zen-userChrome.css`. Home Manager's
+  `linkZenUserChrome` activation writes all of that; rerun a switch if the
+  profile was created after the last one.
+- `~/.local/state/colourme/zen-userChrome.css` exists and changes mtime when a
+  scheme is applied (`colourme` writes it; Home Manager seeds it).
+- The autoconfig files live in the *unwrapped* Zen package
+  (`lib/zen-bin-*/defaults/pref/00-colourme-autoconfig.js` and
+  `lib/zen-bin-*/colourme.cfg`). If a Zen update changes the package layout,
+  the override in `modules/users/features/zen-browser.nix` needs revisiting.
+
+The module polls the file once a second; there is no post_hook. Restarting Zen
+only helps if the module itself failed to load.
 
 ## it87 and the IT8696
 

@@ -15,6 +15,10 @@ post_hook = "pkill -USR2 ghostty || true"
 template = "templates/quickshell.json"
 destination = "~/.local/state/colourme/colours.json"
 
+[zen_browser]
+template = "templates/zen_browser.css"
+destination = "~/.local/state/colourme/zen-userChrome.css"
+
 [gtk3]
 template = "templates/gtk3.css"
 destination = "~/.config/gtk-3.0/colourme-gtk.css"
