@@ -88,16 +88,18 @@ Backup and snapshots:
 
 > **Device names can swap between boots.** The Arch disk is the ~477 GiB WD
 > (`nvme1n1` at the time of writing); Windows is the 3.6 TB Samsung
-> (`nvme0n1`). Always identify by `SIZE`/`MODEL`/`PARTUUID`, never by the
-> `nvmeXn1` name alone.
+> (`nvme0n1`); the Ventoy USB is `sda` (114.6 GB SanDisk). Always identify by
+> `SIZE`/`MODEL`/`PARTUUID`, never by the `nvmeXn1` name alone.
 
 ### 1. Preflight
 
 - ISO: `~/Downloads/nixos-minimal-26.05.11045.774debe7a0d1-x86_64-linux.iso`
   (SHA-256 `81fdbaa462f15a2eb36b4c6a9e3b8d3430b847d9bf63dda36cb8456632a4403b`,
-  matches the release). Write it to a USB stick (≥ 2 GiB) with
-  `dd if=... of=/dev/sdX bs=4M status=progress oflag=sync`; verify the target
-  with `lsblk` before pressing Enter.
+  matches the release). It is already on the Ventoy USB (`sda`, exFAT) and
+  verified there; boot the **minimal 26.05** entry in UEFI mode, not the
+  25.11 graphical one. For a non-Ventoy USB, use
+  `dd if=... of=/dev/sdX bs=4M status=progress oflag=sync` after verifying the
+  target with `lsblk`.
 - Windows: disable Fast Startup (and note any BitLocker recovery key) even
   though the Windows disk is not being repartitioned.
 - Re-run the backup immediately before shrinking:
