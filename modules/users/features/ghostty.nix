@@ -20,6 +20,8 @@ in
     "ghostty/config".text = ''
       theme = Luka
 
+      keybind = ctrl+shift+r=reload_config
+
       font-family = "Roboto Mono"
       font-size = 11.5
       font-style = "Regular"
