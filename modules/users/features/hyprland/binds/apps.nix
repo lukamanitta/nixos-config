@@ -26,5 +26,4 @@ in
   ++ lib.optional (p.browser != null) (bind "B" p.browser)
   ++ lib.optional (p.launcher != null) (bind "SPACE" p.launcher)
   ++ lib.optional (p.clipboardPicker != null) (bind "V" p.clipboardPicker)
-  ++ lib.optional (p.lock != null) (bind "L" p.lock);
 }
