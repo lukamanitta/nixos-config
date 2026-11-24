@@ -30,7 +30,7 @@ destination = "~/.local/state/colourme/nvim/palette.lua"
 [waypaper]
 template = "templates/waypaper.ini"
 destination = "~/.config/waypaper/wallpaper.ini"
-post_hook = "waypaper --restore --state-file ~/.config/waypaper/wallpaper.ini"
+post_hook = "$HOME/.config/hypr/scripts/wallpaper-restore.sh"
 
 [gtk3]
 template = "templates/gtk3.css"

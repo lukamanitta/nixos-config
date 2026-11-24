@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ lib, pkgs, config, ... }:
 
 # Shared compositor feature. Owns everything DE-agnostic: variables, binds,
 # monitors, workspace/window rules, env, autostart. The visual half of the
@@ -48,6 +48,11 @@
 
   config = {
     home.packages = [ pkgs.xdg-terminal-exec ];
+
+    # Scripts are compositor-level and shared by every DE on it (the LiquoRice
+    # shell calls several by absolute path). Out-of-store so edits are live.
+    xdg.configFile."hypr/scripts".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nixos-config/configs/hypr/scripts";
 
     # The polkit *mechanism* is system-wide, but GUI apps need an agent to
     # raise the password prompt; the Arch dotfiles started hyprpolkitagent

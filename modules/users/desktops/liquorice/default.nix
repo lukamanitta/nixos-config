@@ -83,7 +83,6 @@ in
 
     xdg.configFile = {
       "quickshell".source = outOfStore "${home}/nixos-config/configs/quickshell";
-      "hypr/scripts".source = outOfStore "${home}/nixos-config/configs/hypr/scripts";
 
       "hypr/hyprpaper.conf".text = ''
         splash = false

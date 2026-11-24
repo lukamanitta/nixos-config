@@ -35,7 +35,7 @@ Six seams, all writing **outside git**:
 | Quickshell | `FileView` watcher in `Colours.qml` | `~/.local/state/colourme/colours.json` | (none — file watch is instant) |
 | Zen Browser | `colourme.cfg` module registering a USER_SHEET | `~/.local/state/colourme/zen-userChrome.css` | (none — module polls the file) |
 | Neovim | shims in `lua/ui/` loading runtime files | `~/.local/state/colourme/nvim/*.lua` | next Neovim start |
-| Wallpaper | waypaper state restored through hyprpaper | `~/.config/waypaper/wallpaper.ini` | `post_hook = "waypaper --restore …"` |
+| Wallpaper | `wallpaper-restore.sh` (shared with autostart) | `~/.config/waypaper/wallpaper.ini` | `post_hook = "$HOME/.config/hypr/scripts/wallpaper-restore.sh"` |
 
 Waybar, tmux, starship are intentionally out of scope for now. tmux/starship
 inherit Ghostty's terminal palette.
@@ -227,10 +227,14 @@ the dotfiles checkout rather than vendored for now. Waypaper's settings live in
 `~/.config/waypaper/config.ini` as ordinary runtime state; hyprpaper is the
 only installed backend, so waypaper selects it automatically.
 
-At login, `my.hyprland.autostartLate` runs a small helper after
-`services.wallpaper = hyprpaper`; it waits for hyprpaper's IPC socket and then
+At login, `my.hyprland.autostartLate` runs
+`configs/hypr/scripts/wallpaper-restore.sh` after `services.wallpaper =
+hyprpaper`; the script waits for hyprpaper's IPC socket, repairs a stale
+`HYPRLAND_INSTANCE_SIGNATURE` (long-lived panes from an older session) and then
 restores the saved state, so the wallpaper is right on the first frame. The
-Quickshell lock screen reads the same state file for its backdrop.
+same script is the colourme `post_hook`, which is why a scheme switch also works
+from a pane that predates the current compositor. The Quickshell lock screen
+reads the same state file for its backdrop.
 
 ## Defaults — strategy A (build-time render, seed-if-absent)
 
