@@ -74,7 +74,8 @@ Built on the Arch workstation, not installed yet:
 
 Backup and snapshots:
 
-- restic snapshot `12d1374a` (`pre-nixos`, 36.5 GiB, ~135k files) in
+- restic snapshots `12d1374a` (full) and `d313a1ef` (incremental, 44 s; 57 new,
+  42 changed, 134,954 unchanged) in
   `rclone:gdrive:backups/luka-workstation`; password in
   `~/.config/restic/luka-workstation.pass`.
 - `restic check --read-data-subset=1%`: no errors.
@@ -102,14 +103,18 @@ Backup and snapshots:
   target with `lsblk`.
 - Windows: disable Fast Startup (and note any BitLocker recovery key) even
   though the Windows disk is not being repartitioned.
-- Re-run the backup immediately before shrinking:
-  `nix shell nixpkgs#restic nixpkgs#rclone -c ./scripts/pre-nixos-backup.sh`.
+- Backup is current (latest `d313a1ef`); re-run
+  `nix shell nixpkgs#restic nixpkgs#rclone -c ./scripts/pre-nixos-backup.sh`
+  after any last-minute changes.
 - Snapper already has `3128 Pre NixOS install`; create a new one if files
   change after it.
 
 ### 2. Boot the ISO and identify the disks
 
+The commands below assume a root shell on the installer:
+
 ```sh
+sudo -i
 lsblk -o NAME,SIZE,MODEL,FSTYPE,LABEL,PARTUUID,MOUNTPOINTS
 ```
 
