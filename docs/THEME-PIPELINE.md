@@ -30,7 +30,7 @@ Three seams, all writing **outside git**:
 
 | App | Nix points at | `colourme` writes | Reload |
 |---|---|---|---|
-| Hyprland | `require("theme.colourme")` in generated lua | `~/.config/hypr/theme/colourme.lua` | `post_hook = "hyprctl reload"` |
+| Hyprland | `require("theme.colourme")` in generated lua | `~/.config/hypr/theme/colourme.lua` | `post_hook = "hyprctl -i 0 reload"` |
 | Ghostty | `theme = Luka` in config | `~/.config/ghostty/themes/Luka` | `post_hook = "pkill -USR2 ghostty"` |
 | Quickshell | `FileView` watcher in `Colours.qml` | `~/.local/state/colourme/colours.json` | (none — file watch is instant) |
 
@@ -81,7 +81,7 @@ configs/colourme/
 [hypr]
 template = "templates/hypr.lua"
 destination = "~/.config/hypr/theme/colourme.lua"
-post_hook = "hyprctl reload"
+post_hook = "hyprctl -i 0 reload"
 
 [ghostty]
 template = "templates/ghostty"

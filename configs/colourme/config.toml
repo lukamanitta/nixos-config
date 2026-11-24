@@ -1,12 +1,15 @@
 [hypr]
 template = "templates/hypr.lua"
 destination = "~/.config/hypr/theme/colourme.lua"
-post_hook = "hyprctl reload"
+# `-i 0` targets the first live instance, so the reload also works from a
+# long-lived pane whose HYPRLAND_INSTANCE_SIGNATURE predates a compositor
+# restart (see docs/WORKSTATION-TROUBLESHOOTING.md).
+post_hook = "hyprctl -i 0 reload"
 
 [ghostty]
 template = "templates/ghostty"
 destination = "~/.config/ghostty/themes/Luka"
-post_hook = "pkill -USR2 ghostty"
+post_hook = "pkill -USR2 ghostty || true"
 
 [quickshell]
 template = "templates/quickshell.json"
@@ -23,4 +26,5 @@ destination = "~/.config/gtk-4.0/colourme-gtk.css"
 [waybar]
 template = "templates/waybar.css"
 destination = "~/.config/waybar/colourme-waybar.css"
-post_hook = "pkill -USR2 waybar"
+# Waybar only runs under LitheDE; LiquoRice has no bar process to signal.
+post_hook = "pkill -USR2 waybar || true"

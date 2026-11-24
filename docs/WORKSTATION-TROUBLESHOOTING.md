@@ -23,6 +23,7 @@ actually happened on this machine, with the cause and the fix that worked.
 | Rebuild seems to ignore a kernel parameter | [Kernel params need a reboot](#kernel-params-need-a-reboot) |
 | HDMI monitor blanks and flashes its input overlay | [ARZOPA HDMI signal drops](#arzopa-hdmi-signal-drops) |
 | `hyprctl keyword` is ignored / `hyprctl dispatch exit` errors | [Hyprland config is Lua, not ini](#hyprland-config-is-lua-not-ini) |
+| `hyprctl` can't connect after a compositor restart | [Stale Hyprland environment in old panes](#stale-hyprland-environment-in-old-panes) |
 | Keyboard stops working after closing a LiquoRice surface | [Keyboard dead after the pill closes](#keyboard-dead-after-the-pill-closes) |
 
 ## Disk and partition work
@@ -230,6 +231,29 @@ arguments you give `hyprctl` are evaluated as Lua:
 - The generated config is `~/.config/hypr/hyprland.lua`, written by the Nix
   modules as `hl.bind` / `hl.monitor` / `hl.workspace_rule` / `hl.window_rule`
   calls.
+
+### Stale Hyprland environment in old panes
+
+**Symptom:** in a new tab/pane of a long-running multiplexer (herdr, tmux) or in
+a service started before the last login, `hyprctl` fails with `Couldn't connect
+to /run/user/1000/hypr/<old-signature>/.socket.sock`, and `colourme` reports its
+`hypr` post-hook as failed. A terminal started fresh from the compositor works.
+
+**Cause:** `HYPRLAND_INSTANCE_SIGNATURE` and `WAYLAND_DISPLAY` are inherited at
+process start. The herdr/tmux server and lingering user services outlive a
+Hyprland restart, so every pane they spawn gets the old values even though the
+compositor is running.
+
+**Workaround:** commands that accept `-i` can target the live instance
+explicitly — `hyprctl -i 0 reload`, `hyprctl -i 0 monitors` — because
+`hyprctl instances` enumerates the running compositor without needing a
+signature. A terminal started fresh from the compositor has the correct
+environment; panes inside an old herdr/tmux server do not until that server is
+restarted (`herdr server stop`, which restores its tabs).
+
+`configs/colourme/config.toml` uses `hyprctl -i 0` for its reload hook and
+tolerates absent waybar/ghostty processes, so `colourme <scheme>` succeeds from
+any shell.
 
 ## Input
 
