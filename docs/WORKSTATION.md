@@ -153,24 +153,25 @@ Done and verified:
 - Install, first boot, LUKS unlock, btrfs subvolumes, swap.
 - systemd-boot on its own ESP; `Linux Boot Manager` NVRAM entry.
 - Windows handle `FS0` found through the EDK2 shell and committed.
-- `it87` now loads against the IT8696 via the out-of-tree module, so
-  CoolerControl can read the Super I/O.
+- `it87` loads against the IT8696 via the out-of-tree module (committed in
+  `672069b`); CoolerControl reads the Super I/O and **fan curves work**.
 - `gh` can write its own `config.yml`; authentication works.
+- Tailscale is up.
+- Affinity launches.
 
 Not yet verified — do these before declaring the trial passed:
 
 - [ ] Arch still boots via rEFInd from the firmware menu (the GPT conversion
       changed partition GUIDs; prove the fallback before trusting it).
 - [ ] Windows entry actually boots Windows from the systemd-boot menu.
-- [ ] Affinity `affinity-v3` launches and opens a document.
+- [ ] Affinity opens a document and the plugin loader works (it launches).
 - [ ] OBS: PipeWire screen capture + audio.
 - [ ] OpenRGB: `true-white` loads; two ENE DRAM controllers + IT5711 visible
       (RAM detection is known-flaky and deliberately not chased).
-- [ ] CoolerControl: seeded `All Case Fans` (fan1/fan2) applies; the seed is
-      5.0.1-shaped against a 5.1.2 daemon, so review
+- [ ] CoolerControl seed review: `All Case Fans` (fan1/fan2) is what you want,
+      but the seed is 5.0.1-shaped against a 5.1.2 daemon, so glance at
       `/var/lib/coolercontrol/config.toml`.
 - [ ] `rclone-gdrive` mount at `~/mnt/gdrive`, and `gdrive-pin`.
-- [ ] `tailscale up` and a Tailscale SSH/ping from another node.
 - [ ] Wi-Fi (RTL8852CE) and Bluetooth pairing — both untested on NixOS.
 - [ ] Monitor layout: `DP-2` at `0x0` and `HDMI-A-2` at `0x1080`, both preferred.
 - [ ] DaVinci Resolve: still opt-in (`my.creative.davinciResolve = true`) and

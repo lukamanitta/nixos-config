@@ -213,7 +213,8 @@ Endgame, gated by the parity checklist below. Plan and runbook:
 - [ ] Fix `gh` being unable to write its own config (D48) — applied; verify on a
       fresh checkout.
 - [ ] Validate Affinity, OBS, Spotify/Slack/Discord, OpenRGB, CoolerControl,
-      gdrive mount, Tailscale, MSI stack.
+      gdrive mount, Tailscale, MSI stack. (Tailscale, CoolerControl fan curves and
+      Affinity launch verified 2026-11-24; the rest pending.)
 - [ ] One full NixOS workday; then remove Arch and take the whole disk
       ([WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md), D49).
 - [ ] Secure Boot (lanzaboote + custom keys) after Arch is gone.
@@ -228,9 +229,11 @@ Endgame, gated by the parity checklist below. Plan and runbook:
 - [x] AI agent setup (opencode + skills) at parity
 - [ ] Browser (Zen, including Widevine/DRM)
 - [ ] Slack
-- [ ] Tailscale
-- [ ] Creative: Affinity v3, OBS, DaVinci Resolve (or a documented fallback)
-- [ ] OpenRGB + CoolerControl on the real hardware
+- [x] Tailscale (workstation, 2026-11-24)
+- [ ] Creative: Affinity v3 (launches; document + plugin test pending), OBS,
+      DaVinci Resolve (or a documented fallback)
+- [ ] OpenRGB + CoolerControl on the real hardware (CoolerControl fan curves
+      verified; OpenRGB pending)
 - [ ] Google Drive on-demand mount + offline pinning
 - [ ] Hyprland / Quickshell stable for one week
 - [ ] colourme theme pipeline

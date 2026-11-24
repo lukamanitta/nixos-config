@@ -221,10 +221,10 @@ grep . /sys/class/hwmon/hwmon*/name
 sensors | grep -iE 'fan|temp'
 ```
 
-**Caveat for future work:** the second half of this fix was applied on the
-machine but is **not yet committed** to `hardware.nix` as of 2026-11-24. Check
-`git grep extraModulePackages modules/hosts/luka-workstation/` before trusting
-a fresh checkout; it must list `config.boot.kernelPackages.it87`.
+**Committed state:** the package line lives in `hardware.nix` as of `672069b`,
+and on this kernel/nixpkgs it built with no module collision, so the
+`system.modulesTree` override above is **not** in use. Add it only if a build
+actually fails with a duplicate `it87.ko`.
 
 If the module loads but no `hwmon` device appears, do not guess `force_id`
 values — wrong chip IDs scale voltages incorrectly. Record
