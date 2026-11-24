@@ -108,6 +108,16 @@ ThePillSurface {
             argv: [Quickshell.env("HOME") + "/.config/hypr/scripts/lock.sh"]
         },
         {
+            key: "logout",
+            // Nerd Font fa-sign-out (U+F08B); the config is Lua-based, so the
+            // dispatcher must be a Lua expression.
+            glyph: "\uF08B",
+            label: "Logout",
+            confirm: false,
+            dispatch: "",
+            argv: ["hyprctl", "dispatch", "hl.dsp.exit()"]
+        },
+        {
             key: "reboot",
             glyph: "",
             label: "Reboot",
@@ -126,7 +136,7 @@ ThePillSurface {
     // { key: "shutdown", glyph: "", label: "Shutdown", confirm: true,  dispatch: "", argv: ["hyprshutdown", "-p", "\"shutdown now\""] }
     ]
 
-    readonly property int splitAfter: 1
+    readonly property int splitAfter: 2
 
     function run(a) {
         if (a.dispatch && a.dispatch.length) {
