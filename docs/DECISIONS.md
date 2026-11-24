@@ -579,3 +579,46 @@ split across two partitions on one disk, and no advantage over a reinstall.
 Gated on a full NixOS workday. See
 [WORKSTATION-ARCH-REMOVAL.md](./WORKSTATION-ARCH-REMOVAL.md).
 
+## Colour seams and wallpapers (2026-11-24)
+
+### D50 — Zen's userChrome live reload is a local autoconfig module (settled)
+Zen applies `userChrome.css` at startup and never reloads it. Sine would need
+the same install-directory patch (its bootloader is a `config.js` plus pref
+files) and only offers a manual refresh, so it was not used. The browser
+resolves its application directory to the *unwrapped* package (the nixpkgs
+wrapper only symlinks the files, confirmed with strace), so the autoconfig
+files are installed there by an `overrideAttrs` in
+`modules/users/features/zen-browser.nix`. The pref file is named
+`00-colourme-autoconfig.js` so it cannot collide with the wrapper's own
+`autoconfig.js`. `colourme.cfg` registers a profile `chrome.manifest` and
+imports a system module that registers the runtime CSS as a USER_SHEET,
+re-registers it with a cache-busting URI when the mtime changes, and holds the
+timer callback on `globalThis` (nsITimer does not keep its JS callback alive).
+Drop all of it if Zen ever ships native reloading.
+
+### D51 — Neovim keeps colourme's output out of the repo (settled)
+The dotfiles config generated `lua/ui/set_colourscheme.lua` and
+`lua/ui/palettes/colourme.lua` into the working tree. In NixOS that would dirty
+the repo on every scheme switch, so `configs/nvim` keeps two committed shims
+that `loadfile` the runtime files under `~/.local/state/colourme/nvim/` and
+fall back to Gruvbox. The config itself is symlinked to `~/.config/nvim`;
+plugins and LSP servers stay runtime state (`vim.pack` + Mason). A fresh
+install needs network, `tree-sitter`/`gcc`/`node` (added to `home.packages`),
+and the devicons guard in `lua/h.lua` keeps the first `vim.pack` confirmation
+from erroring on a missing plugin.
+
+### D52 — Wallpapers are scheme-driven waypaper state on hyprpaper (settled)
+Each colourme scheme carries `wallpaper = "~/.wallpaper/<scheme>/<file>"`; the
+`[waypaper]` template renders the waypaper state file and the post-hook runs
+`configs/hypr/scripts/wallpaper-restore.sh`. At login the same script runs from
+the new `my.hyprland.autostartLate` list, after `services.wallpaper =
+hyprpaper`, and waits for hyprpaper's IPC socket so the first frame is correct.
+The script also resolves the live `HYPRLAND_INSTANCE_SIGNATURE` from
+`hyprctl instances` when it is called from a pane older than the compositor,
+because waypaper internally calls `hyprctl monitors` and cannot use `-i`.
+Waypaper's own settings stay runtime state in `~/.config/waypaper/config.ini`.
+`~/.wallpaper` is a symlink into the `~/dotfiles` checkout (59 MB) for now, so
+a machine without it has no wallpapers; vendor a curated set before the Arch
+removal. `hypr/scripts` moved from the LiquoRice module to the shared Hyprland
+feature because these are compositor-level files.
+
