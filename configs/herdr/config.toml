@@ -1,17 +1,19 @@
 # Herdr configuration
 #
-# Ported from ~/.config/tmux/tmux.conf. The tmux prefix was ctrl+a there, but
-# Herdr deliberately keeps ctrl+b (its default) as the prefix.
+# Ported from ~/.config/tmux/tmux.conf, including its ctrl+a prefix.
 
 onboarding = false
+
+[theme]
+name = "terminal"
 
 [terminal]
 # tmux splits and new windows inherited the current pane's directory.
 new_cwd = "follow"
 
 [keys]
-# Prefix: ctrl+b, matching Herdr's default.
-prefix = "ctrl+b"
+# Prefix: ctrl+a, matching the old tmux setup.
+prefix = "ctrl+a"
 
 # tmux: bind r source-file ~/.config/tmux/tmux.conf
 reload_config = "prefix+r"
