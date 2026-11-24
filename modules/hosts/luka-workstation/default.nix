@@ -133,7 +133,19 @@
             scale = "1";
           }
         ];
-        workspaceRules = [ ];
+        # Persistent per-monitor workspaces, matching the Arch dotfiles:
+        # odd numbers on DP-2, even numbers on HDMI-A-2.
+        workspaceRules =
+          map (ws: {
+            workspace = ws;
+            monitor = "DP-2";
+            persistent = true;
+          }) [ "1" "3" "5" "7" "9" ]
+          ++ map (ws: {
+            workspace = ws;
+            monitor = "HDMI-A-2";
+            persistent = true;
+          }) [ "2" "4" "6" "8" "10" ];
       };
     };
   };
