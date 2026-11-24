@@ -5,6 +5,12 @@
     enable = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+
+    shellAliases.lg = "lazygit";
+
+    initContent = ''
+      bindkey '^F' autosuggest-accept
+    '';
   };
 
   programs.starship.enable = true;
