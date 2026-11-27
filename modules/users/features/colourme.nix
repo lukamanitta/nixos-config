@@ -107,6 +107,9 @@ in
       _seed_colourme ${defaultThemes}/.config/waybar/colourme-waybar.css \
         "$HOME/.config/waybar/colourme-waybar.css" \
         "$HOME/.local/state/colourme/seeded/waybar.css"
+      _seed_colourme ${defaultThemes}/.config/spicetify/Themes/Matte/color.ini \
+        "$HOME/.config/spicetify/Themes/Matte/color.ini" \
+        "$HOME/.local/state/colourme/seeded/spicetify-matte-color.ini"
     '';
   };
 }

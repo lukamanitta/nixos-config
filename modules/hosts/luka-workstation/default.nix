@@ -282,6 +282,7 @@ in
         ../../users/luka/home.nix
         ../../users/features/gdrive.nix
         ../../users/features/openrgb.nix
+        ../../users/features/spicetify.nix
       ];
 
       # LiquoRice (Quickshell) is the desktop; flip to "lithe" to fall back to
@@ -298,6 +299,7 @@ in
 
       my.gdrive.enable = true;
       my.openrgb.enable = true;
+      my.spicetify.enable = true;
 
       my.hyprland = {
         monitors = [

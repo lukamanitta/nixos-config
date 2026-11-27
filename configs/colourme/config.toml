@@ -45,3 +45,9 @@ template = "templates/waybar.css"
 destination = "~/.config/waybar/colourme-waybar.css"
 # Waybar only runs under LitheDE; LiquoRice has no bar process to signal.
 post_hook = "pkill -USR2 waybar || true"
+
+[spicetify]
+template = "templates/spicetify-matte.ini"
+destination = "~/.config/spicetify/Themes/Matte/color.ini"
+# The launcher runs spicetify's watcher alongside the client, so a rewrite
+# here reloads the running window. No post_hook: the watcher polls the file.
