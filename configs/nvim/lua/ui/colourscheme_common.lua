@@ -36,6 +36,8 @@ return function()
     U.set_hl("LineNrAbove", { link = "LineNr" })
     U.set_hl("LineNrBelow", { link = "LineNr" })
 
+    U.mod_hl("Winbar", { bg = U.get_hl("StatusLine", "bg#") })
+
     U.set_hl("TreesitterContextLineNumber", { link = "LineNr" })
     U.set_hl("TreesitterContextSeparator", { link = "Comment" })
 end
