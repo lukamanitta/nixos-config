@@ -10,6 +10,10 @@
 
     initContent = ''
       bindkey '^F' autosuggest-accept
+
+      # Typing a bare directory name (notably `..`) cds into it instead of
+      # trying to execute it.
+      setopt auto_cd
     '';
   };
 
