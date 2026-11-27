@@ -52,7 +52,7 @@ end of the disk.
 | p1 | 2048–1050623 | 512 MiB | vfat, Arch ESP, fs UUID `9369-6B68` | rEFInd (`EFI/refind/refind_x64.efi`), a stale `EFI/systemd/systemd-bootx64.efi`, UKIs in `EFI/Linux/`, `EFI/BOOT/BOOTX64.EFI`. ~302 MiB used. **Arch's fallback — not NixOS's.** |
 | p2 | 1050624–9439231 | 4 GiB | swap, UUID `2e4e9d1b-e843-42be-8340-32eff0b609e5` | Arch's swap, **reused by NixOS** (`swapDevices`). Unencrypted. |
 | p3 | 9439232–748562431 | 352.44 GiB | btrfs, fs UUID `7331adf4-2345-4553-8570-b2ce1fa35729` | Arch root. Subvolumes `@`, `@var`, `@opt`, `@home`, `@ssh`, `@snapshots`, `@home-snapshots` (+ nested `@var/lib/{machines,portables}`, `@snapshots/<n>/snapshot`). **The only copy of Arch.** |
-| p4 | 748562432–750659583 | 1 GiB | vfat label `NIXBOOT`, PARTUUID `ec04e73a-e98c-4087-b20b-0d4276580eb8`, fs UUID `261B-9CAD` | NixOS ESP, systemd-boot. |
+| p4 | 748562432–750659583 | 1 GiB | vfat label `NIXBOOT`, PARTUUID `ec04e73a-e98c-4087-b20b-0d4276580eb8`, fs UUID `261B-9CAD` | NixOS ESP, Limine. |
 | p5 | 750659584–1000215215 | ~119 GiB | LUKS2 label `NIXROOT`, UUID `b6191a65-7b50-4a79-8865-89dc8d7b7332` → mapper `nixos` → btrfs label `nixos` | NixOS root. Subvolumes `@`, `@home`, `@nix`. |
 
 The disk is fully allocated: no free space remains after p5. Growing NixOS
@@ -68,28 +68,71 @@ entry `Windows Boot Manager` (`Boot0000`).
 
 ## Boot
 
-- NixOS boots from p4 via systemd-boot. Its NVRAM entry is labelled
-  **`Linux Boot Manager`**, not "NixOS" — that is `bootctl`'s own label.
-- Arch boots via rEFInd on p1. rEFInd is a separate EFI application, so it
-  appears in the **firmware boot menu** (F12), never in systemd-boot's menu.
-  There are two redundant `rEFInd` NVRAM entries: `Boot0001`, which predates the
-  MBR→GPT conversion, and `Boot0002`, recreated with `efibootmgr` immediately
-  afterwards. Both load the same binary; keep one and delete the other when
-  tidying firmware entries.
-- Windows is chainloaded by systemd-boot through the EDK2 shell handle in
-  `boot.loader.systemd-boot.windows."Windows".efiDeviceHandle`, currently
-  **`FS0`** (found with `map -r` in the shell). systemd-boot cannot read another
-  ESP, which is why this indirection exists.
-- `boot.loader.systemd-boot.edk2-uefi-shell.enable = true` provides the shell
-  entry used for `map -r`, for reaching Windows' ESP, and as the escape hatch
-  into Arch: from the shell, `FSx:\EFI\refind\refind_x64.efi`.
-- `boot.loader.systemd-boot.configurationLimit = 10` on a 1 GiB ESP. Watch
-  `df -h /boot`; each generation costs roughly 50–60 MiB.
+- The NixOS ESP (p4) is owned by **Limine**; the firmware entry is labelled
+  **`Limine`**. The menu is deliberately **monochrome and minimal**: the
+  black-and-white `files/limine/mac-1.jpg` cropped to fill 16:9, a
+  white-on-black menu panel, no branding and hidden key hints. It waits **10
+  s**, keeps **5** generations (`boot.loader.limine.maxGenerations`), and
+  **remembers the last booted entry** (`remember_last_entry`). Booting Windows
+  and rebooting therefore preselects Windows.
+- A NixOS rebuild must still win over "last booted": activation rewrites
+  Limine's `LimineLastBootedEntry` EFI variable to the new generation.
+  `nixos-rebuild switch` does this; `nixos-rebuild boot` does **not** run
+  activation, so after `boot` select the new generation once.
+- **Secure Boot is configured** (and is switched on by the first
+  `nixos-rebuild boot` + reboot). `sbctl` keys live in `/var/lib/sbctl` (inside
+  the encrypted root); Limine is signed with them and its config BLAKE2b hash is
+  enrolled into the binary. Microsoft and firmware built-in keys are kept, so
+  Windows, the GPU option ROMs and firmware capsules keep loading. Limine
+  verifies kernels/initrds by hash added at install time; kernel modules are
+  not signed and the NixOS kernel has no lockdown LSM, which is what lets the
+  out-of-tree `it87` fan driver load.
+- Windows has its own ESP on the Samsung NVMe. Limine chainloads it directly by
+  GPT partition GUID
+  (`4427216c-77f0-4027-884d-1e394b40e929:/EFI/Microsoft/Boot/BOOTMGFW.EFI`);
+  the firmware verifies its Microsoft signature. The old systemd-boot
+  `efiDeviceHandle = "FS0"` and the unsigned EDK2 shell are no longer used.
+- Arch still boots through rEFInd on p1, but rEFInd is **unsigned**: with
+  Secure Boot on it will not start. To use the fallback, temporarily disable
+  Secure Boot in firmware (Security → Secure Boot), boot Arch, then turn it
+  back on. Do not clear the keys.
+- TPM2 auto-unlock is covered under "Filesystem/encryption".
+- **Plymouth** (`breeze` theme) owns the screen from the kernel handoff until
+  userspace is up; `quiet` + `loglevel=3` keep the journal off the console.
+- There is **no display manager**. getty autologins `luka` on tty1 only, the
+  login shell execs Hyprland, and LiquoRice locks immediately, so the
+  Quickshell lock surface is the login screen. Logout returns to it. tty2–6
+  keep a normal password prompt, so the lock cannot be bypassed with
+  Ctrl+Alt+F2.
+- Recovery from a broken Secure Boot change: enter firmware setup (Del at POST,
+  or `systemctl reboot --firmware-setup` from a working system) and disable
+  Secure Boot. Clearing keys is only safe if `/var/lib/sbctl` has been backed
+  up; without it, regenerating keys means re-enrolling and re-signing.
+- Once Limine has booted successfully, the stale systemd-boot artefacts and
+  NVRAM entry can be removed to free the ESP and avoid selecting an unsigned
+  loader: `sudo rm -rf /boot/EFI/systemd /boot/EFI/nixos
+  /boot/EFI/edk2-uefi-shell /boot/loader` and `sudo efibootmgr -b 0003 -B`
+  (check the number with `efibootmgr -v`). Keep the rEFInd entry until Arch is
+  removed.
+
 
 ## Filesystem/encryption decisions as installed
 
-- LUKS2, passphrase, **US keyboard layout at the initrd prompt**, no recovery
-  keyslot yet. Adding a keyslot later is cheap; losing the passphrase is not.
+- LUKS2 with **two keyslots**: the original passphrase (US keyboard layout at
+  the initrd prompt) and a **TPM2 keyslot bound to PCR 7**. The TPM2 slot is
+  what makes boot passwordless; the passphrase slot is the recovery path. If a
+  firmware update, key change or Secure Boot toggle changes PCR 7, the TPM
+  unseal fails and the passphrase prompt returns. Re-enroll after verifying
+  Secure Boot is on:
+
+  ```sh
+  sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 \
+    /dev/disk/by-uuid/b6191a65-7b50-4a79-8865-89dc8d7b7332
+  ```
+
+  To replace a stale TPM2 slot, add `--wipe-slot=tpm2` (never `--wipe-slot=0`,
+  which is the passphrase). No recovery-key keyslot was added beyond the
+  passphrase; losing the passphrase still loses the disk.
 - btrfs `@`, `@home`, `@nix` with `compress=zstd`; `/nix` also `noatime`.
 - `hardware-configuration.nix` was generated by `nixos-generate-config` on the
   installed system. It names the LUKS device `nixos` (from the mapper name) and
@@ -101,8 +144,9 @@ entry `Windows Boot Manager` (`Boot0000`).
 ## Repo map (host-specific)
 
 - `modules/hosts/luka-workstation/default.nix` — hostname, MSI, Tailscale,
-  OpenRGB (root service disabled), CoolerControl, Bluetooth, boot loaders,
-  Windows handle, RTC-in-local-time, Affinity substituter, Home Manager wiring.
+  OpenRGB (root service disabled), CoolerControl, Bluetooth, Limine +
+  Secure Boot, Windows GUID entry, TPM2/Plymouth, tty1 autologin, generation
+  retention, RTC-in-local-time, Affinity substituter, Home Manager wiring.
 - `modules/hosts/luka-workstation/hardware.nix` — CPU/GPU/i2c/microcode/
   redistributable firmware, `it87`, and `acpi_enforce_resources=lax`.
 - `modules/hosts/luka-workstation/hardware-configuration.nix` — **generated**;
@@ -124,7 +168,23 @@ sudo nix-collect-garbage -d                                          # after pru
 ```
 
 Kernel-parameter and initrd changes need `switch` **and** a reboot; `switch`
-alone leaves the running kernel as it was.
+alone leaves the running kernel as it was. `switch` also updates Limine's
+remembered entry to the new generation; `boot` does not.
+
+Secure Boot / TPM day-2 checks:
+
+```sh
+sudo sbctl status                  # Secure Boot enabled? keys present?
+sudo sbctl verify                  # is the Limine binary signed?
+sudo bootctl status                # firmware/SB/TPM view (bootctl still works)
+sudo efibootmgr -v                 # NixOS entry is "Limine", Windows still there
+df -h /boot                        # ESP headroom; 5 generations max
+```
+
+If Secure Boot keys are ever rotated or firmware updates change PCR 7, the TPM
+prompt disappears and the passphrase is asked for; re-enroll with the command
+in "Filesystem/encryption". Back `/var/lib/sbctl` up before reinstalling or
+clearing firmware keys.
 
 State that is not in the store and must be recreated by hand after a reinstall:
 `tailscale up`, `~/.config/rclone/rclone.conf`, `gh auth login`, the
@@ -151,19 +211,37 @@ where `msi-nix` is meant to live for every host.
 Done and verified:
 
 - Install, first boot, LUKS unlock, btrfs subvolumes, swap.
-- systemd-boot on its own ESP; `Linux Boot Manager` NVRAM entry.
-- Windows handle `FS0` found through the EDK2 shell and committed.
 - `it87` loads against the IT8696 via the out-of-tree module (committed in
   `672069b`); CoolerControl reads the Super I/O and **fan curves work**.
 - `gh` can write its own `config.yml`; authentication works.
 - Tailscale is up.
 - Affinity launches.
 
+Boot/login changes made on 2026-11-27 (see D53–D56), not yet booted:
+
+- systemd-boot replaced by Limine with a 10 s monochrome menu, 5 generations
+  and `remember_last_entry`; the Windows entry chainloads by GPT partition GUID.
+- Secure Boot keys generated/enrolled, Limine signed, config hash enrolled.
+- Plymouth `breeze` + `quiet`/`loglevel=3`.
+- TPM2 keyslot prepared in config; **enrollment is still manual after the
+  first Secure Boot boot** (see "Filesystem/encryption").
+- greetd/tuigreet removed on this host; tty1 autologin + Quickshell lock as
+  the login UI.
+- `nix.gc` weekly at 14 days; `limine.maxGenerations = 5`.
+
 Not yet verified — do these before declaring the trial passed:
 
-- [ ] Arch still boots via rEFInd from the firmware menu (the GPT conversion
-      changed partition GUIDs; prove the fallback before trusting it).
-- [ ] Windows entry actually boots Windows from the systemd-boot menu.
+- [ ] Reboot into Limine with Secure Boot enabled; `sbctl status` says
+      `Secure Boot: enabled`, `sbctl verify` passes.
+- [ ] `systemd-cryptenroll` TPM2 keyslot enrolled and a reboot unlocks the
+      root with no passphrase.
+- [ ] Windows boots from Limine; reboot back and confirm Windows is
+      preselected (remember-last), then a `nixos-rebuild switch` makes the new
+      generation preselected instead.
+- [ ] Arch still boots via rEFInd from the firmware menu **after temporarily
+      disabling Secure Boot** (rEFInd is unsigned).
+- [ ] Plymouth splash, tty1 autologin, Quickshell lock screen, and logout
+      returning to the lock screen.
 - [ ] Affinity opens a document and the plugin loader works (it launches).
 - [ ] OBS: PipeWire screen capture + audio.
 - [ ] OpenRGB: `true-white` loads; two ENE DRAM controllers + IT5711 visible

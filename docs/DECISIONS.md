@@ -159,16 +159,18 @@ The same trap applies to anything that shells out to a dispatcher, including
 
 ## Session / display manager
 
-### D15 — greetd + tuigreet instead of SDDM (settled)
+### D15 — greetd + tuigreet was the display manager (superseded by D56 on the workstation)
 SDDM's Wayland keyboard backend is deliberately non-functional
 (`WaylandKeyboardBackend::init` sets `enabled = false`), so its layout selector
 is a cosmetic `ZZ` dummy. greetd + tuigreet is a Wayland-native TUI login with
-no fake selector. ([SDDM source](https://github.com/sddm/sddm/blob/develop/src/greeter/waylandkeyboardbackend.cpp))
+no fake selector. The disposable VM still uses it; the workstation now has no
+display manager at all (D56). ([SDDM source](https://github.com/sddm/sddm/blob/develop/src/greeter/waylandkeyboardbackend.cpp))
 
 ### D16 — No X11 / no X server (settled)
-Hyprland on Wayland, SDDM replaced by greetd; `console.useXkbConfig = true` so
-the TTY/greeter keymap matches `services.xserver.xkb.layout`. XWayland stays on
-for X app compatibility.
+Hyprland on Wayland; SDDM was replaced by greetd, and the workstation now
+autologins on tty1 into the Quickshell lock (D56). `console.useXkbConfig =
+true` so the TTY/keymap matches `services.xserver.xkb.layout`. XWayland stays
+on for X app compatibility.
 
 ---
 
@@ -247,18 +249,16 @@ palette. This grows D3's role set with `services.osd`.
 
 ## Session autologin & lock
 
-### D23 — Autologin + lock-as-greeter deferred (open)
-Keep greetd + tuigreet as a normal greeter for now. The "autologin, then the
-quickshell lock screen is the login" flow is deferred. It is a display-manager
-concern (system-level), not a separate `session.nix` connector module: if
-revisited, the option lives with the DM feature and asserts against the
-embedded HM config (a NixOS module can read
-`config.home-manager.users.<user>.my.desktop.services.lockDaemon`).
+### D23 — Autologin + lock-as-greeter (adopted on the workstation, D56)
+Keep greetd + tuigreet as a normal greeter for the VM. The workstation uses a
+console autologin and the Quickshell lock screen as the login UI (D56). It
+remains a display-manager/session concern, not a separate `session.nix`
+connector module.
 
-### D24 — Lock: `programs.lock` now, `lockDaemon` deferred (settled/open)
+### D24 — Lock: `programs.lock` now, Quickshell lock later (superseded by D56)
 `programs.lock = "hyprlock"` (lock now) is provided by the baseline feature and
-bound to `$mod+L`. A persistent lock daemon (`services.lockDaemon`, e.g.
-quickshell's) lands with the deferred lock/autologin flow.
+bound to `$mod+L`. The persistent Quickshell lock daemon is now used on the
+workstation as the login surface (D56); the VM keeps the baseline lock.
 
 ---
 
@@ -485,20 +485,19 @@ its config remains so re-enabling is one line (`idle = lib.mkDefault
 
 ## Workstation (Arch → NixOS)
 
-### D40 — `luka-workstation` starts as a dual-boot trial (settled)
+### D40 — `luka-workstation` starts as a dual-boot trial (superseded by D53)
 The workstation is a Ryzen 9800X3D + RX 9070 XT on a Gigabyte B850M. It gets its
-own host entry and a **separate 1 GiB ESP + systemd-boot** while Arch keeps its
+own host entry and a **separate 1 GiB ESP** while Arch keeps its
 512 MiB ESP/rEFInd as the fallback. Windows lives on its own ESP on the second
-NVMe; systemd-boot reaches it through the EDK2 shell handle (`map -r`; `FS0` as
-of 2026-11-24), with the firmware menu as the fallback. After a full NixOS
-workday, Arch is wiped and NixOS takes the whole disk. See
-[WORKSTATION.md](./WORKSTATION.md).
+NVMe. D53 later replaced systemd-boot/EDK2 with Limine's direct GUID
+chainload. After a full NixOS workday, Arch is wiped and NixOS takes the whole
+disk. See [WORKSTATION.md](./WORKSTATION.md).
 
-### D41 — LUKS2 + btrfs subvolumes; Secure Boot is deferred (settled)
+### D41 — LUKS2 + btrfs subvolumes; Secure Boot was deferred (superseded by D53/D54)
 The NixOS partition is LUKS2 (passphrase) with btrfs `@`, `@home`, `@nix`
 subvolumes and zstd; the existing 4 GiB swap partition is reused. Secure Boot
-is intentionally postponed until after Arch is removed, then lanzaboote with
-custom keys.
+was postponed until after Arch was removed; it was eventually enabled earlier
+with Limine + sbctl, and TPM2/PCR 7 auto-unlock added alongside the passphrase.
 
 ### D42 — Creative apps are native; Affinity is a flake (settled)
 Slack, Spotify, Discord, VLC, OBS and DaVinci are native nixpkgs packages; no
@@ -622,3 +621,70 @@ a machine without it has no wallpapers; vendor a curated set before the Arch
 removal. `hypr/scripts` moved from the LiquoRice module to the shared Hyprland
 feature because these are compositor-level files.
 
+
+## Boot, Secure Boot and login (2026-11-27)
+
+### D53 — Limine, not lanzaboote, owns the boot menu and Secure Boot (settled)
+Lanzaboote is the established NixOS Secure Boot path, but it only drives
+systemd-boot. systemd-boot cannot be themed, has no "remember the last booted
+entry" (only `@saved`), and its Windows menu entry is the EDK2 shell, which is
+unsigned and would stop working as soon as Secure Boot is on. Limine 12.5 in
+nixpkgs 26.05 has all four missing pieces in one module: a graphical themed
+menu, `remember_last_entry`, a `maxGenerations` cap, and Secure Boot via sbctl
+with Microsoft/firmware built-in keys. Windows is chainloaded directly by GPT
+partition GUID (`protocol: efi`), so the firmware verifies its Microsoft
+signature and the shell is no longer needed. Limine verifies its config against
+a BLAKE2b hash enrolled into the signed binary; kernels/initrds are verified by
+hash rather than being individually signed. The trade-off is that Limine's
+NixOS module is younger than lanzaboote; the fallback is documented in
+WORKSTATION.md.
+
+"Remember last entry" must not defeat updates: on a NixOS rebuild the next
+boot should use the new generation, not the one that happened to boot last.
+Activation therefore rewrites Limine's `LimineLastBootedEntry` EFI variable to
+the new generation. `nixos-rebuild boot` does not run activation, so after that
+command the previous generation stays selected; pick the new one once.
+
+### D54 — LUKS auto-unlock is TPM2 bound to PCR 7, with no PIN (settled)
+The root volume keeps its passphrase keyslot and gains a TPM2 keyslot enrolled
+with `systemd-cryptenroll --tpm2-pcrs=7` **after** Secure Boot is active. PCR 7
+covers the Secure Boot policy, so the keyslot survives kernel/initrd updates
+but stops matching if firmware keys change, Secure Boot is turned off, or the
+TPM is cleared; in those cases the passphrase prompt returns, which is the
+intended recovery path. No PIN is used because the requirement is passwordless
+boot. PCR 11 is not usable here: Limine does not boot through systemd-stub, and
+Limine's measured PCR 8/9 include `init=`/generation paths that change on every
+rebuild. Binding only PCR 7 is weaker than measured boot (any signed boot path
+can unseal), but it is the standard secure-boot-only policy and is paired with
+an encrypted, Secure-Boot-verified root.
+
+### D55 — Five boot-menu generations, fourteen days in the store (settled)
+`boot.loader.limine.maxGenerations = 5` because the 1 GiB ESP gets roughly
+75 MiB of kernel+initrd per generation; ten would leave little headroom.
+`nix.gc` runs weekly with `--delete-older-than 14d`, so the menu stays small
+while the store keeps two weeks of generations for
+`nixos-rebuild switch --rollback`. The two limits are independent on purpose:
+the ESP is the scarce resource, the store is not (61 GiB free).
+
+### D56 — Console autologin on tty1; the Quickshell lock is the greeter (settled)
+The workstation has no display manager. getty autologins `luka` on tty1 only;
+the login shell's `~/.zprofile` execs `start-hyprland`, and LiquoRice's
+`my.desktops.lockOnStart` starts the Quickshell lock daemon before the bar, so
+the lock surface is the login UI. Logging out exits Hyprland, getty respawns
+and the lock comes back. tty2-6 keep a normal password prompt, which is what
+stops a lock screen being bypassed with Ctrl+Alt+F2; SSH login shells are
+unaffected. The VM keeps greetd + tuigreet (`my.desktops.autologin` and
+`lockOnStart` default to false there).
+
+### D57 — Limine's menu is monochrome and static, not a colourme seam (settled)
+Limine's theme lives in `limine.conf`, whose BLAKE2b hash is enrolled in the
+signed bootloader. Changing the colours or wallpaper therefore requires the
+installer to re-enroll the hash and re-sign the binary; a live colourme seam
+would need root, a full `limine.conf` regeneration (generation entries plus
+file hashes) and a rebuild per scheme. That is not worth it for a boot menu.
+The menu is deliberately neutral: the black-and-white
+`files/limine/mac-1.jpg` cropped to fill 16:9, a white-on-black
+panel, no branding and hidden help. colourme remains the desktop theme only.
+If a per-scheme boot theme is ever wanted, the clean path is a build-time
+template rendered from a `my.theme.bootScheme`-style option, not a runtime
+hook.

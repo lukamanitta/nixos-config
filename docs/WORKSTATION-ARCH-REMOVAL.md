@@ -26,8 +26,10 @@ destroys data by design.
   the Ventoy stick (`sda`, SanDisk 3.2Gen1). Boot the **minimal 26.05 UEFI**
   entry; the 25.11 graphical ISO on the same stick is not the one this was
   tested with.
-- Keep **Secure Boot off** until lanzaboote is installed: Ventoy and the NixOS
-  ISO are unsigned.
+- Keep **Secure Boot disabled while booting installer media**: Ventoy and the
+  NixOS ISO are unsigned. The installed system already uses Limine Secure Boot
+  (D53); disabling it in firmware for the install does not remove the keys, and
+  the reinstall can restore or regenerate them.
 
 ## Rescue list — things that only exist on Arch
 
@@ -43,6 +45,8 @@ external drive or a password manager:
 | `~/code` trees | e.g. `~/code/msi` beyond `msi-nix` | `msi-nix` is on NixOS; the rest may not be. |
 | `msi-nix` remote + rev | `git -C ~/code/msi-nix remote -v; git rev-parse HEAD` | The flake pins it by absolute path; a reinstall has to re-clone it at rev `21732288b9700ed2dd9c283ad0c0defc6893db17`. |
 | dotfiles repo | `~/dotfiles` | Different machine per `AGENTS.md`, but check for anything unique. |
+| Secure Boot keys | `/var/lib/sbctl` | Limine's signing keys and enrolment database. Losing them means re-enrolling firmware and re-signing. |
+| TPM2 enrolment | LUKS header (p5) | Re-enroll after the reinstall; a fresh LUKS volume will not have the old slot. |
 | Browser profiles | `~/.config/{zen,chromium}` | Mostly excluded from restic; rely on sync, or copy by hand. |
 | Anything from older file versions | `@snapshots/<n>/snapshot` | Snapper snapshots are the only history once the disk is gone. |
 | Arch package list | `pacman -Qqe` | Reference for parity gaps. |
@@ -158,11 +162,13 @@ partition filling the disk, with no legacy layout to work around.
    ```sh
    sudo efibootmgr -v
    sudo efibootmgr -b 0001 -B      # one per stale rEFInd entry; numbers differ
-   sudo efibootmgr -o <order>      # Linux Boot Manager first
+   sudo efibootmgr -o <order>      # Limine first
    ```
 
 10. **Verify:** boot NixOS, `findmnt -R /`, `df -h /boot`, `lsblk`, Windows from
-    the systemd-boot menu, and `sudo nixos-rebuild switch`.
+    the Limine menu, and `sudo nixos-rebuild switch`. Then re-enable Secure Boot
+    and restore `/var/lib/sbctl` before the first boot, or let the installer
+    generate/enroll new keys and re-enroll the TPM2 slot afterwards.
 
 ## Path B — keep the install, add the freed space as a second device
 
@@ -203,10 +209,14 @@ gained over a reinstall except time.
 
 ## After Arch is gone
 
-- **Secure Boot** (deferred by D41): lanzaboote with custom keys. Do it once the
-  disk layout is final, since it changes how kernels are signed and booted.
-- Re-check `boot.loader.systemd-boot.configurationLimit` against the new ESP
-  size, and `df -h /boot` after a few generations.
+- **Secure Boot and Limine** (D53) are already in place. Restore
+  `/var/lib/sbctl` from the rescue list before the reinstalled system's first
+  boot if you want to keep the enrolled keys; otherwise let the Limine module
+  generate and enroll new ones and update the firmware.
+- Re-enroll the LUKS TPM2 slot (PCR 7) after the reinstall and verify
+  passwordless boot (D54).
+- Re-check `boot.loader.limine.maxGenerations` against the new ESP size, and
+  `df -h /boot` after a few generations.
 - Consider adding `allowDiscards = true` to the LUKS device now that there is
   no dual-boot reason to avoid extra writes.
 - Decide whether snapshots are wanted. NixOS generations cover

@@ -155,8 +155,8 @@ old copy until the new install boots.
 ## 9. Dev machine (`luka-workstation`) notes
 
 The current plan is a **dual-boot trial** on the workstation, then a full
-replacement. Host-specific layout, backup/cleanup scripts, Windows
-`efiDeviceHandle`, creative apps and post-install checks live in
+replacement. Host-specific layout, backup/cleanup scripts, the Limine/Secure
+Boot stack, creative apps and post-install checks live in
 [WORKSTATION.md](./WORKSTATION.md). Use this section only for the eventual
 full replacement:
 
@@ -165,8 +165,10 @@ install — but destructive:
 
 - Back up everything you care about first, and confirm the backup *restores*,
   not just that it ran.
-- NixOS will own the bootloader; `core.nix` already enables `systemd-boot` +
-  `efi.canTouchEfiVariables`, which is what you want on UEFI hardware.
+- NixOS will own the bootloader. `core.nix` enables `systemd-boot` for the VM;
+  the workstation host overrides it with Limine (`boot.loader.limine`) +
+  Secure Boot (D53), and `efi.canTouchEfiVariables` is what you want on UEFI
+  hardware.
 - Confirm the firmware is UEFI (not legacy BIOS) and the disk uses GPT.
 - Do a full end-to-end dry run on the test VM first; migrate only once the
   parity checklist in the ROADMAP passes.

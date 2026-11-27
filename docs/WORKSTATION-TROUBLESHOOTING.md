@@ -9,9 +9,11 @@ actually happened on this machine, with the cause and the fix that worked.
 | `sgdisk -g` says the secondary table overlaps the last partition by 33 blocks | [GPT conversion refused](#gpt-conversion-refused) |
 | `mkpart` fails / only four partitions possible | [MBR four-primary limit](#mbr-four-primary-limit) |
 | `btrfs filesystem resize` fails with ENOSPC | [btrfs shrink ENOSPC](#btrfs-shrink-enospc) |
-| Installed system boots but there is no "NixOS" firmware entry | [Boot entry named Linux Boot Manager](#boot-entry-named-linux-boot-manager) |
-| systemd-boot's Windows entry errors out | [Windows entry / handle](#windows-entry--handle) |
-| rEFInd/Arch is not in the systemd-boot menu | [Arch is in the firmware menu](#arch-is-in-the-firmware-menu) |
+| Installed system boots but there is no "nixos" firmware entry | [Boot entry named Limine](#boot-entry-named-limine) |
+| Limine's Windows entry errors out | [Windows entry in Limine](#windows-entry-in-limine) |
+| Arch no longer boots after Secure Boot was enabled | [Arch is in the firmware menu (and needs Secure Boot off)](#arch-is-in-the-firmware-menu-and-needs-secure-boot-off) |
+| Secure Boot blocks boot after a key/rebuild change | [Limine and Secure Boot](#limine-and-secure-boot) |
+| LUKS still asks for the passphrase | [TPM2 unlock](#tpm2-unlock) |
 | `modprobe it87: No such device` | [it87 and the IT8696](#it87-and-the-it8696) |
 | CoolerControl shows no fans | [it87 and the IT8696](#it87-and-the-it8696) |
 | `gh auth login` fails with `read-only file system` | [gh config.yml is read-only](#gh-configyml-is-read-only) |
@@ -127,40 +129,92 @@ filesystem exists. The absence of `TYPE=` is what means "empty".
 
 ## Install and boot
 
-### Boot entry named Linux Boot Manager
+### Boot entry named Limine
 
-`nixos-install` creates the systemd-boot NVRAM entry via `bootctl`, which
-labels it **`Linux Boot Manager`**. Grepping `efibootmgr -v` for "nixos" finds
-nothing and is not evidence of a failed install. Check `efibootmgr` for the
-label, and `/boot/EFI/systemd/systemd-bootx64.efi` for the binary.
+Limine's installer creates its own NVRAM entry labelled **`Limine`** (the
+old `Linux Boot Manager`/systemd-boot entry may still be in the list until it
+is deleted). Grepping `efibootmgr -v` for "nixos" finds nothing and is not
+evidence of a failed install. Check `efibootmgr -v` for `Limine`, and
+`/boot/efi/limine/BOOTX64.EFI` for the signed binary. Boot order is rewritten
+by the installer to put Limine first; if firmware still starts something else,
+fix the order in firmware setup or `efibootmgr -o`.
 
-### Windows entry / handle
+### Windows entry in Limine
 
-systemd-boot cannot read a second ESP, so `boot.loader.systemd-boot.windows`
-chainloads Windows through the EDK2 shell handle
-(`efiDeviceHandle`, currently `FS0`). To (re)discover it: choose the *UEFI
-Shell* entry at the systemd-boot menu, then
+Windows is on the Samsung ESP, which Limine can read directly. The entry is a
+manual `extraEntries` stanza in
+`modules/hosts/luka-workstation/default.nix`:
 
 ```
-map -r
-map
-ls FS0:\EFI\Microsoft\Boot\bootmgfw.efi
-ls FS1:\EFI\Microsoft\Boot\bootmgfw.efi
+/Windows
+  protocol: efi
+  path: guid(4427216c-77f0-4027-884d-1e394b40e929):/EFI/Microsoft/Boot/BOOTMGFW.EFI
 ```
 
-The `FSx` whose path exists is the handle. Update
-`modules/hosts/luka-workstation/default.nix` and
-`sudo nixos-rebuild switch`. The mapping can shift when disks, USB devices, or
-firmware settings change; if the menu entry starts erroring, rediscover it.
-Firmware's own `Windows Boot Manager` entry always works as a fallback.
+`4427…` is the Windows ESP's **GPT partition GUID** (`lsblk -no PARTUUID
+/dev/nvme0n1p1`). `BOOTMGFW.EFI` is written in 8.3 form because Limine's FAT
+lookup is case-sensitive for long filenames; the 8.3 short name is compared
+case-insensitively. If Windows moves to another disk/ESP, update the GUID. The
+firmware's own `Windows Boot Manager` entry remains the fallback if the Limine
+stanza is wrong. Secure Boot verifies the Microsoft signature on
+`bootmgfw.efi`; the old EDK2 shell is no longer involved.
 
-### Arch is in the firmware menu
+### Arch is in the firmware menu (and needs Secure Boot off)
 
 rEFInd lives on Arch's ESP (p1) and is its own EFI application, so it appears
-in the **motherboard boot menu** (F12), not in systemd-boot. Two identical
-`rEFInd` NVRAM entries exist (`Boot0001`, `Boot0002`); either works. Without
-the firmware menu, reach Arch from the EDK2 shell:
-`FSx:\EFI\refind\refind_x64.efi`, where `FSx` is the 512 MiB Arch ESP.
+in the **motherboard boot menu** (F12), never in Limine. Two identical
+`rEFInd` NVRAM entries exist (`Boot0001`, `Boot0002`); either works. rEFInd is
+**unsigned**, so with Secure Boot enabled it will not start: temporarily
+disable Secure Boot in firmware, boot Arch, then re-enable it. Without the
+firmware menu, reach Arch from the EDK2 shell only while Secure Boot is off
+(`FSx:\EFI\refind\refind_x64.efi`).
+
+### Limine and Secure Boot
+
+After a rebuild that changes the bootloader, verify before rebooting:
+
+```sh
+sudo sbctl status          # keys present; Setup Mode?
+sudo sbctl verify          # /boot/efi/limine/BOOTX64.EFI is signed
+sudo bootctl status        # "Secure Boot: enabled (user)" when active
+sudo efibootmgr -v         # Limine first, Windows second
+```
+
+Traps:
+
+- The first `nixos-rebuild boot` with `secureBoot.autoEnrollKeys` creates
+  `/var/lib/sbctl`, enrolls our keys plus Microsoft/firmware built-in keys, and
+  signs Limine. If firmware was in Setup Mode, the next boot normally turns
+  Secure Boot on by itself; if it does not, enable it once in firmware.
+- A boot failure after key enrollment is recoverable: enter firmware setup,
+  disable Secure Boot, boot NixOS, and fix/sign. **Do not clear keys** unless
+  `/var/lib/sbctl` is backed up.
+- If a generation is rebuilt while Secure Boot is off, the enrolled config
+  hash is still updated, but the Microsoft/our keys must still be in firmware.
+- Limine's config hash is enrolled into the binary at install time. Editing
+  `/boot/efi/limine/limine.conf` by hand breaks the hash and Limine will panic
+  with Secure Boot on; change the Nix config and rebuild instead.
+- The NixOS kernel is not built with lockdown or forced module signatures
+  (`CONFIG_SECURITY_LOCKDOWN_LSM` unset), which is why the unsigned `it87`
+  module still loads. Do not enable lockdown without signing external modules.
+
+### TPM2 unlock
+
+The root LUKS volume gets a TPM2 keyslot **after** Secure Boot is active. If the
+passphrase is still asked for:
+
+```sh
+sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 \
+  /dev/disk/by-uuid/b6191a65-7b50-4a79-8865-89dc8d7b7332
+sudo systemd-cryptenroll --wipe-slot=tpm2 ...   # only to replace a stale slot
+```
+
+Check the slot count with `sudo cryptsetup luksDump
+/dev/disk/by-uuid/b6191a65-…` (look for `systemd-tpm2` in the Tokens section).
+A PCR 7 mismatch after a firmware update, key rotation or Secure Boot toggle is
+expected; the passphrase prompt is the fallback, and re-enrolling fixes it.
+`tpm2-device=auto` is in `boot.initrd.luks.devices."nixos".crypttabExtraOpts`,
+so systemd-cryptsetup tries the token before asking.
 
 ### Kernel params need a reboot
 
@@ -170,9 +224,11 @@ generation, not the running kernel. Verify with `cat /proc/cmdline`.
 
 ### ESP size
 
-p4 is 1 GiB with `configurationLimit = 10`. Each generation costs roughly
-50–60 MiB (kernel + initrd), so 10 generations plus systemd-boot is tight. Check
-`df -h /boot` after a few rebuilds and lower the limit if it climbs past ~70%.
+p4 is 1 GiB and `boot.loader.limine.maxGenerations = 5`; Limine keeps its own
+copies of kernels/initrds under `/boot/limine`. Identical files are deduped,
+but a kernel/initrd change adds roughly 75 MiB per generation. Check
+`df -h /boot` after a few rebuilds and lower `maxGenerations` if it climbs past
+~70%. `nix.gc` (weekly, 14 days) prunes the store side, not the ESP.
 
 ## Displays
 
@@ -457,8 +513,12 @@ fan3/fan5 on default.
 ### LUKS details
 
 - Passphrase is typed with a **US layout** in the initrd.
-- No recovery keyslot exists yet. Adding one (a keyfile on a USB stick, or a
-  second passphrase) is the cheapest insurance and can be done live:
+- The TPM2 keyslot is bound to PCR 7 and is the passwordless path; the
+  passphrase slot remains recovery. A firmware/key/Secure-Boot change makes the
+  TPM unseal fail and the passphrase prompt return; re-enroll (see [TPM2
+  unlock](#tpm2-unlock)).
+- Adding a second recovery passphrase or a keyfile on a USB stick is cheap
+  insurance and can be done live:
   `sudo cryptsetup luksAddKey /dev/disk/by-uuid/b6191a65-…`.
 - `hardware-configuration.nix` does not set `allowDiscards`; TRIM does not pass
   through the container until that is added (needs a rebuild + reboot).
