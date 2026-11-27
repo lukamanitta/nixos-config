@@ -13,6 +13,12 @@
 
   environment.variables.EDITOR = "vim";
 
+  # Mason installs upstream release binaries (lua-language-server,
+  # rust-analyzer, ...) linked against the generic GNU loader at
+  # /lib64/ld-linux-x86-64.so.2, which NixOS lacks. nix-ld provides the shim;
+  # the servers only need glibc itself, which it supplies by default.
+  programs.nix-ld.enable = true;
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
