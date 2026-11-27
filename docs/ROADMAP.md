@@ -268,7 +268,7 @@ Endgame, gated by the parity checklist below. Plan and runbook:
 - [ ] Google Drive on-demand mount + offline pinning
 - [ ] Hyprland / Quickshell stable for one week
 - [ ] colourme theme pipeline
-- [ ] spicetify
+- [x] spicetify
 - [ ] VPN
 - [ ] Backups verified
 - [ ] MSI work environment at parity (see `msi-nix/docs/ROADMAP.md`)

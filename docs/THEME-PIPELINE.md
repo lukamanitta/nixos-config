@@ -1,7 +1,8 @@
 # Theme pipeline (colourme × Home Manager)
 
 Plan for integrating `colourme` into this flake. Status: **implemented for the
-Hyprland, Ghostty, Quickshell, Zen Browser, Neovim and wallpaper seams**.
+Hyprland, Ghostty, Quickshell, Zen Browser, Neovim, Spicetify and wallpaper
+seams**.
 
 Related: `DECISIONS.md` D18/D25 (superseded in part by D27), and the colourme
 repo's `INTERFACE_CHANGES.md` (required changes) + `REVIEW.md` (bug list).
@@ -26,7 +27,7 @@ Nix owns structure and points each themed value at a **runtime-writable file**
 that `colourme` renders. Nix never owns a themed byte. Live reload is driven by
 `colourme`'s own `post_hook`s (kept in its config, not in Nix).
 
-Six seams, all writing **outside git**:
+Seven seams, all writing **outside git**:
 
 | App | Nix points at | `colourme` writes | Reload |
 |---|---|---|---|
@@ -35,6 +36,7 @@ Six seams, all writing **outside git**:
 | Quickshell | `FileView` watcher in `Colours.qml` | `~/.local/state/colourme/colours.json` | (none — file watch is instant) |
 | Zen Browser | `colourme.cfg` module registering a USER_SHEET | `~/.local/state/colourme/zen-userChrome.css` | (none — module polls the file) |
 | Neovim | shims in `lua/ui/` loading runtime files | `~/.local/state/colourme/nvim/*.lua` | next Neovim start |
+| Spicetify | `current_theme = Matte` / `color_scheme = colourme` | `~/.config/spicetify/Themes/Matte/color.ini` | instant while running (watcher reloads the window); next launch otherwise |
 | Wallpaper | `wallpaper-restore.sh` (shared with autostart) | `~/.config/waypaper/wallpaper.ini` | `post_hook = "$HOME/.config/hypr/scripts/wallpaper-restore.sh"` |
 
 Waybar, tmux, starship are intentionally out of scope for now. tmux/starship
@@ -214,6 +216,26 @@ two thin shims at `lua/ui/set_colourscheme.lua` and
 `lua/ui/palettes/colourme.lua` that `loadfile` the runtime files and fall back
 to Gruvbox, so colourme never writes inside the repo. There is no watcher: a
 running Neovim keeps its palette until restarted.
+
+### Spicetify
+
+Implemented. Spotify comes from nixpkgs (D42) and lives in the immutable
+store, while spicetify patches assets next to the app. The `spotify` launcher
+(`modules/users/features/spicetify.nix`) therefore keeps a writable copy at
+`~/.local/share/spotify-spiced`: it stamps the copy with the Spotify store
+path, rebuilds it after an update (`cp --reflink=auto`), applies the theme from
+`~/.config/spicetify`, then execs the copy. The wrapper's environment
+(`LD_LIBRARY_PATH`, GIO/GDK modules, Wayland flags) is preserved by rewriting
+the store wrapper's one hardcoded share path.
+
+`configs/colourme/templates/spicetify-matte.ini` renders Matte's `color.ini`;
+Matte's `user.css` is symlinked from the dotfiles checkout (desktop-only
+in-scope, like `~/.wallpaper`). `config-xpui.ini` is seeded once by activation
+because spicetify writes its `[Backup]` section into it. There is no
+`post_hook`: the launcher starts the client with a loopback DevTools endpoint
+and runs `spicetify watch -s`, whose poller notices the rewrite and reloads the
+window — a live switch while Spotify is open, or the next launch applies it.
+`spicetify-nix` was rejected; see D58.
 
 ### Wallpaper
 

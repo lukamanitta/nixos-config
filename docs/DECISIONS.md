@@ -688,3 +688,30 @@ panel, no branding and hidden help. colourme remains the desktop theme only.
 If a per-scheme boot theme is ever wanted, the clean path is a build-time
 template rendered from a `my.theme.bootScheme`-style option, not a runtime
 hook.
+
+### D58 — Spicetify patches a writable copy, applied at launch (settled)
+`spicetify-nix` renders the theme into a store package at build time, which
+breaks the colourme seam: a scheme switch could never reach it without a
+rebuild. Instead a `spotify` launcher copies nixpkgs Spotify's `share/spotify`
+to `~/.local/share/spotify-spiced` (reflinked on btrfs), rewrites the store
+wrapper's single hardcoded share path so its library/GIO/Wayland environment
+still applies, and stamps the copy with the store path so a Spotify update
+rebuilds it. Every launch then runs `spicetify backup apply` (fresh copy) or
+`spicetify apply` before exec'ing the copy, and colourme owns
+`Themes/Matte/color.ini`. There is deliberately no post_hook: the launcher
+starts Spotify with `--remote-debugging-port=9222 --remote-allow-origins=*`
+(loopback only) and supervises `spicetify watch -s`, whose byte-comparison
+poller notices colourme's rewrite, refreshes the CSS and calls
+`window.location.reload()` through the DevTools socket — a live switch while
+the client is open. The poller always refreshes once at start (its cache
+begins empty), which lands while the client is still loading. The watcher only
+starts once `/json/list` exposes a Spotify target, because spicetify's watch
+mode restarts the client when it cannot find one; if the endpoint never
+appears the next launch applies the theme as before. `config-xpui.ini` is
+seeded once by activation rather than
+linked from the store because spicetify writes `[Backup]` into it. The
+home-profile `spotify` shadows the unspiced system binary, and a same-ID
+desktop entry shadowing nixpkgs' launches the launcher; `pkgs.spotify` stays
+installed for its icons and as the pristine copy source. A client started
+before this change (no debug port) keeps the old next-launch semantics until
+it is quit and relaunched through the launcher.
