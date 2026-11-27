@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 
 {
   programs.zsh = {
@@ -7,6 +7,15 @@
     syntaxHighlighting.enable = true;
 
     shellAliases.lg = "lazygit";
+
+    # Console autologin (workstation): getty starts a login shell on tty1 and
+    # this execs the compositor, so logout falls back to getty and immediately
+    # returns to the Quickshell lock screen. Other TTYs and SSH get a shell.
+    profileExtra = lib.mkIf config.my.desktops.autologin ''
+      if [ -z "$WAYLAND_DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+        exec start-hyprland
+      fi
+    '';
 
     initContent = ''
       bindkey '^F' autosuggest-accept

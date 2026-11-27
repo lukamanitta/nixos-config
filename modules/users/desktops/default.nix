@@ -18,4 +18,14 @@
       shell (no bar, launcher, notifications, or OSD).
     '';
   };
+
+  options.my.desktops.lockOnStart = lib.mkEnableOption ''
+    locking the session immediately after login, so a Quickshell lock surface
+    acts as the login screen (see DECISIONS D23)
+  '';
+
+  options.my.desktops.autologin = lib.mkEnableOption ''
+    logging the user in on tty1 and exec'ing the compositor from the login
+    shell (used with `lockOnStart` to make the lock screen the login UI)
+  '';
 }

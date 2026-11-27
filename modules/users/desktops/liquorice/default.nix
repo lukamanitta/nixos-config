@@ -137,6 +137,13 @@ in
       # so `services.notification` / `services.osd` stay null.
     };
 
+    # Lock-as-greeter: the session starts underneath the lock surface, so the
+    # tty1 autologin presents a real login UI. Runs before the bar and other
+    # autostart entries; `lock.sh` starts the daemon and then locks.
+    my.hyprland.autostart = lib.mkIf config.my.desktops.lockOnStart (
+      lib.mkBefore [ "${scripts}/lock.sh" ]
+    );
+
     # Pill surfaces that are not part of the shared role interface.
     wayland.windowManager.hyprland.settings.bind = [
       (bind ''mod .. " + M"'' "${scripts}/open-pill-surface.sh media")
