@@ -61,6 +61,9 @@
 
   systemd.tmpfiles.rules = [
     "C /var/lib/coolercontrol/overrides.toml 0644 root root - ${./files/coolercontrol/overrides.toml}"
+    # The MSI repos' helper scripts use `#!/bin/bash`; NixOS only ships
+    # /bin/sh, so Ruby's Open3 fails to exec them with ENOENT.
+    "L+ /bin/bash - - - - ${pkgs.bashInteractive}/bin/bash"
   ];
 
   # Bluetooth (RTL8852CE combo).
