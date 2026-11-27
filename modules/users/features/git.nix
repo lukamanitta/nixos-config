@@ -3,6 +3,11 @@
 {
   programs.git = {
     enable = true;
+    # Per-repo shell wiring is personal; keep it out of the work repos.
+    ignores = [
+      ".direnv"
+      ".envrc"
+    ];
     settings = {
       user.name = "Luka Manitta";
       user.email = "luka@lukamanitta.com";
